@@ -16,5 +16,27 @@
   },
   "locale": {
     "switchLabel": "Выберите язык"
+  },
+  "nav": {
+    "home": "Ясен",
+    "settings": "Настройки",
+    "logout": "Выйти"
+  },
+  "login": {
+    "title": "Вход",
+    "emailLabel": "Электронная почта",
+    "passwordLabel": "Пароль",
+    "submit": "Войти",
+    "invalidInput": "Введите правильный адрес электронной почты и пароль.",
+    "invalidCredentials": "Неправильный адрес электронной почты или пароль."
+  },
+  "settings": {
+    "changePasswordTitle": "Смена пароля",
+    "oldPasswordLabel": "Текущий пароль",
+    "newPasswordLabel": "Новый пароль",
+    "submit": "Сохранить",
+    "success": "Пароль изменён.",
+    "invalidInput": "Новый пароль должен содержать не менее 8 символов.",
+    "wrongPassword": "Текущий пароль неверен."
   }
 }

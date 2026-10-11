@@ -16,5 +16,27 @@
   },
   "locale": {
     "switchLabel": "Choose language"
+  },
+  "nav": {
+    "home": "Yasen",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "login": {
+    "title": "Log in",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submit": "Log in",
+    "invalidInput": "Enter a valid email and password.",
+    "invalidCredentials": "Incorrect email or password."
+  },
+  "settings": {
+    "changePasswordTitle": "Change password",
+    "oldPasswordLabel": "Current password",
+    "newPasswordLabel": "New password",
+    "submit": "Save",
+    "success": "Password changed.",
+    "invalidInput": "The new password must be at least 8 characters.",
+    "wrongPassword": "Current password is incorrect."
   }
 }

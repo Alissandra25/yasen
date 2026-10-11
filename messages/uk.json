@@ -16,5 +16,27 @@
   },
   "locale": {
     "switchLabel": "Виберіть мову"
+  },
+  "nav": {
+    "home": "Ясен",
+    "settings": "Налаштування",
+    "logout": "Вийти"
+  },
+  "login": {
+    "title": "Вхід",
+    "emailLabel": "Електронна пошта",
+    "passwordLabel": "Пароль",
+    "submit": "Увійти",
+    "invalidInput": "Введіть правильну електронну пошту та пароль.",
+    "invalidCredentials": "Неправильна електронна пошта або пароль."
+  },
+  "settings": {
+    "changePasswordTitle": "Зміна пароля",
+    "oldPasswordLabel": "Поточний пароль",
+    "newPasswordLabel": "Новий пароль",
+    "submit": "Зберегти",
+    "success": "Пароль змінено.",
+    "invalidInput": "Новий пароль має містити щонайменше 8 символів.",
+    "wrongPassword": "Поточний пароль неправильний."
   }
 }
