@@ -2,7 +2,6 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
-import { connection } from "next/server";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
@@ -19,9 +18,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
-}
+// Every page reads live business/session data, so nothing here should be statically cached
+// from build time.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -30,7 +29,6 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata" });
-  await connection();
   const business = await getCurrentBusiness();
   return {
     title: business?.name ?? t("title"),
