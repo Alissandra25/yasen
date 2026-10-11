@@ -6,7 +6,7 @@
   "home": {
     "title": "Yasen",
     "subtitle": "Inventory and sales for a small shop.",
-    "stageNotice": "Stage 0 (foundation) is in progress. The owner dashboard isn't built yet."
+    "stageNotice": "Stage 1 (MVP) is in progress. The owner dashboard isn't built yet."
   },
   "theme": {
     "light": "Light",
@@ -37,6 +37,23 @@
     "submit": "Save",
     "success": "Password changed.",
     "invalidInput": "The new password must be at least 8 characters.",
-    "wrongPassword": "Current password is incorrect."
+    "wrongPassword": "Current password is incorrect.",
+    "referenceDataTitle": "Reference data",
+    "locationsLink": "Locations"
+  },
+  "locations": {
+    "title": "Locations",
+    "empty": "No locations yet.",
+    "nameLabel": "Name",
+    "typeLabel": "Type",
+    "type": {
+      "shop": "Shop",
+      "warehouse": "Warehouse"
+    },
+    "add": "Add location",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "invalidInput": "Enter a name and choose a type."
   }
 }
