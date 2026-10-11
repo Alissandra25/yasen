@@ -267,7 +267,7 @@ Posted documents (goods receipts, transfers, etc.) can be corrected after postin
 - **Authorisation:** sessions with role-based access (owner / seller) — details in 9.
 - **Charts:** a charting library (e.g. Recharts).
 - **Money — integer minor units (cross-cutting rule):** all monetary values (prices, totals, compensation) are stored as an integer number of kopecks/cents, never as floating point, to avoid rounding errors. Integer minor units were chosen (rather than numeric) because calculations live in JS, which has no exact decimal type: integers stay exact both in the database and in code. Conversion to decimals and the currency symbol happen only at the display layer.
-  - *Note:* profitability and shares produce fractional results (half-kopecks) — the rounding rule is defined below.
+  - _Note:_ profitability and shares produce fractional results (half-kopecks) — the rounding rule is defined below.
 - **Money rounding and parsing (cross-cutting rule):**
   - Fractions are allowed only inside a calculation and are rounded once, at the end, half away from zero (0.5 kopeck → 1).
   - VAT is calculated per document line; the document total is the sum of the rounded lines, so parts always sum to the whole.
@@ -319,7 +319,7 @@ A mandatory part of development, three levels with different requirements.
 
 > **Cross-cutting rule — timestamps:** every table has created_at and updated_at, even where the list below doesn't mention them. PostgreSQL doesn't add them on its own, so they are declared via a shared helper in the Drizzle schema that every table includes. created_at — DEFAULT now() (the database sets it on insert). updated_at — maintained via Drizzle's $onUpdate; this only fires for changes made through Drizzle, so direct SQL changes (data migrations, manual fixes) must set it explicitly. If a database-level guarantee is ever needed — a PostgreSQL trigger.
 
-- **businesses** — id, name, vat_enabled, vat_rate, archive_period_products (default 1 month), archive_period_suppliers (default 3 months), timezone (IANA, default Europe/Kyiv), currency (ISO 4217, default UAH), suppliers_enabled (default true), period_lock_grace_days (default 5), primary_color (hex, nullable — main brand colour), accent_color (hex, nullable — accent), logo (bytea, nullable), logo_mime_type (nullable), created_at — business settings (archive-candidate periods here; restock rule defaults in restock_rules).
+- **businesses** — id, name, description (nullable — short tagline, shown wherever the business name appears, e.g. the app header), vat_enabled, vat_rate, archive_period_products (default 1 month), archive_period_suppliers (default 3 months), timezone (IANA, default Europe/Kyiv), currency (ISO 4217, default UAH), suppliers_enabled (default true), period_lock_grace_days (default 5), primary_color (hex, nullable — main brand colour), accent_color (hex, nullable — accent), logo (bytea, nullable), logo_mime_type (nullable), created_at — business settings (archive-candidate periods here; restock rule defaults in restock_rules).
 - **locations** — id, business_id, name, type (shop/warehouse).
 - **categories** — id, business_id, name, parent_id (nullable — empty for a category, set for a subcategory), sort_order (display order within the parent; changed via drag & drop in settings; named sort_order rather than order because ORDER is a reserved SQL word), archived.
 - **users** — id, business_id, email, password_hash (bcrypt), role (owner/seller), theme (light/dark/system, default system), created_at. Sessions are server-side, key in an httpOnly secure cookie. Password reset tokens are single-use, short-lived (see 9).
@@ -377,9 +377,9 @@ A mandatory part of development, three levels with different requirements.
 ### 12.5 Hosting
 
 - **Development stage — Vercel.** Native to Next.js, deployment straight from GitHub, free Hobby plan (100 GB traffic, 1M function invocations — plenty of headroom). Convenient while functionality is being built. Downside for this project's goals: it hides the entire deployment layer, so there's nothing to show in terms of infrastructure skills — hence the move at the next stage.
-  - *Limit to remember:* a Vercel function must complete within 60 s (Hobby) / 300 s (Pro) — important for generating large PDFs / heavy reports.
+  - _Limit to remember:_ a Vercel function must complete within 60 s (Hobby) / 300 s (Pro) — important for generating large PDFs / heavy reports.
 - **Maturity stage — Railway ($5/month, Hobby plan).** Accepts a Docker image, PostgreSQL is added in one click in the same project (connection string automatically in env vars), **no sleeping** — the app is always live. Chosen deliberately: free container tiers have effectively disappeared in 2026 (Railway and [Fly.io](http://Fly.io) dropped their free tiers; Render free sleeps after 15 min idle and takes 30–60 s to wake — unacceptable since the friend actually uses the app). For $5 — a live service for her + real Docker and a self-managed database for the portfolio.
-  - *Alternatives considered:* [Fly.io](http://Fly.io) (pay-as-you-go, \~$5, the most "Docker-centric", but more manual work with fly.toml); Render paid instance (\~$7, no sleeping). Railway chosen for its balance of convenience and control.
+  - _Alternatives considered:_ [Fly.io](http://Fly.io) (pay-as-you-go, \~$5, the most "Docker-centric", but more manual work with fly.toml); Render paid instance (\~$7, no sleeping). Railway chosen for its balance of convenience and control.
 - **Database — PostgreSQL on Railway** (at the maturity stage, together with the app). During development on Vercel the database can live on Neon (free PostgreSQL, no card required) — at the move, data is carried over via Drizzle migrations.
 - **Migration:** standard Next.js is not locked to any platform — the Docker image moves between Railway, Render, [Fly.io](http://Fly.io) or a VPS without rewriting (the door stays open).
 

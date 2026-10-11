@@ -5,14 +5,31 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentBusiness } from "@/server/services/business";
 
-// The business name is data from businesses.name, not UI copy, so it isn't a translation key.
-// It's split out and suspended because it's the page's only uncached database read; connection()
-// tells the prerenderer this subtree is request-time only, since a DB read isn't one of Next's
-// own dynamic APIs it would otherwise detect on its own.
-async function BusinessName({ fallback }: { fallback: string }) {
+// Name and description are data from businesses.name/description, not UI copy, so they aren't
+// translation keys — the fallbacks are, for the edge case of a fresh install before the one
+// business row is seeded. Fetched together so there's one DB read, not two.
+// connection() tells the prerenderer this subtree is request-time only, since a DB read isn't one
+// of Next's own dynamic APIs it would otherwise detect on its own.
+async function BusinessIntro({
+  fallbackName,
+  fallbackDescription,
+}: {
+  fallbackName: string;
+  fallbackDescription: string;
+}) {
   await connection();
   const business = await getCurrentBusiness();
-  return business?.name ?? fallback;
+
+  return (
+    <>
+      <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        {business?.name ?? fallbackName}
+      </h1>
+      <p className="max-w-md text-lg text-muted-foreground">
+        {business?.description ?? fallbackDescription}
+      </p>
+    </>
+  );
 }
 
 export default async function Home({
@@ -31,18 +48,37 @@ export default async function Home({
         <ThemeToggle />
       </div>
       <div className="flex flex-col items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          <Suspense fallback={t("title")}>
-            <BusinessName fallback={t("title")} />
-          </Suspense>
-        </h1>
-        <p className="max-w-md text-lg text-muted-foreground">
-          {t("subtitle")}
-        </p>
+        <Suspense
+          fallback={
+            <HomeFallback title={t("title")} subtitle={t("subtitle")} />
+          }
+        >
+          <BusinessIntro
+            fallbackName={t("title")}
+            fallbackDescription={t("subtitle")}
+          />
+        </Suspense>
       </div>
       <p className="max-w-md rounded-lg border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
         {t("stageNotice")}
       </p>
     </div>
+  );
+}
+
+function HomeFallback({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <>
+      <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        {title}
+      </h1>
+      <p className="max-w-md text-lg text-muted-foreground">{subtitle}</p>
+    </>
   );
 }
