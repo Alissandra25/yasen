@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p>
+  <img src="docs/assets/yasen-logo-light.svg" alt="Yasen — household goods" width="360">
+</p>
 
-## Getting Started
+# Yasen — inventory & sales for a small shop
 
-First, run the development server:
+A web app for a small retail business (a household goods shop in Ukraine) to track products and stock
+across a shop and a warehouse, enter daily sales, plan restocking, run stocktakes and see what
+actually makes money.
+
+It replaces paper notebooks: sellers write sales down during the day, and in the evening the owner
+transfers them into a day-by-day matrix — online or offline.
+
+> **Status:** stage 0 (foundation) in progress. See the [roadmap](#roadmap).
+
+## Highlights
+
+- **Sales matrix** — products × days, filled in after the fact; optional cash / card split per cell.
+- **Works offline** for sales entry: append-only records with client-generated IDs, so syncing never creates duplicates or conflicts.
+- **Multiple locations** — shops and warehouses, transfers between them, a destination per line on goods receipts.
+- **Never blocks a sale** — stock may go negative and is highlighted for reconciliation instead.
+- **Audit log** of every state change, and **closed periods**: after a stocktake or month end, documents become read-only so printed reports stay true.
+- **Profitability at historical cost** — every sale keeps the purchase price in effect on its day.
+- **Restock suggestions** computed on the fly from configurable rules; saved lists grouped by supplier.
+- **Three languages** (English, Ukrainian, Russian), light and dark themes, per-business brand colours.
+
+## Tech stack
+
+| Area | Choice |
+| --- | --- |
+| Framework | Next.js (App Router), TypeScript (strict) |
+| Database | PostgreSQL, Drizzle ORM + Drizzle Kit migrations |
+| Validation | Zod (shared between forms and server actions) |
+| UI | Tailwind CSS, shadcn/ui, next-themes, Recharts |
+| Client data | TanStack Query |
+| i18n | next-intl |
+| Documents | React-pdf (PDF), Excel/CSV export |
+| Email | Resend |
+| Monitoring | Sentry |
+| Tests | Vitest (unit, integration), Playwright (E2E) |
+| Hosting | Vercel + Neon during development → Docker on Railway |
+| CI/CD | GitHub Actions |
+
+## Engineering decisions worth knowing
+
+- **Money is integer kopecks.** Never floats. Parsing, rounding (half away from zero, once, at the end) and formatting live in one tested module, `src/lib/money.ts`.
+- **Time is the business's time.** "Day" and "month" are computed in the business time zone (default Europe/Kyiv), not the server's or the browser's. Exact moments are stored in UTC; date-only values stay `YYYY-MM-DD` strings and never become a JS `Date`.
+- **Server actions follow one shape:** permission check → Zod validation → service call in a transaction → audit log.
+- **Business logic lives in services** (`src/server/services/`) as plain functions, so it is unit-tested without HTTP or auth.
+- **Backups:** nightly encrypted `pg_dump` via GitHub Actions, stored off the hosting provider, plus the provider's own volume backups.
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20+
+- A PostgreSQL database (a free [Neon](https://neon.tech) project works)
+
+### Setup
 
 ```bash
+git clone https://github.com/Alissandra25/yasen.git yasen
+cd yasen
+npm install
+cp .env.example .env.local   # fill in the values below
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `APP_URL` | Public URL of the app (used in password-reset links) |
+| `RESEND_API_KEY` | Sending password-reset emails |
+| `EMAIL_FROM` | Sender address for those emails |
+| `SENTRY_DSN` | Error reporting |
+| `SENTRY_AUTH_TOKEN` | Uploading source maps at build time |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript, no emit |
+| `npm run format` | Prettier |
+| `npm run test` | Unit and integration tests (Vitest) |
+| `npm run test:e2e` | End-to-end tests (Playwright) |
+| `npm run db:generate` | Create a migration from schema changes |
+| `npm run db:migrate` | Apply migrations |
+| `node scripts/i18n-check.mjs` | Report translation keys missing in any language |
 
-To learn more about Next.js, take a look at the following resources:
+## Project structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+  app/                 routes (App Router)
+  components/          UI; components/ui is generated by shadcn
+  db/schema/           Drizzle schema
+  lib/                 money.ts, dates.ts and other shared helpers
+  server/
+    services/          business logic (unit-tested)
+    actions/           server actions: auth + validation + service + audit
+    exports/           report builders for PDF / Excel
+messages/              translations: en.json, uk.json, ru.json
+drizzle/               generated migrations (never edited by hand)
+docs/
+  spec/                technical and business specification
+  CURRENT_STAGE.md     what is being built right now
+.claude/               Claude Code rules, skills and hooks
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Roadmap
 
-## Deploy on Vercel
+- [ ] **0. Foundation** — auth, cross-cutting helpers, i18n, theming, monitoring, tests, backups
+- [ ] **1. MVP** — products & categories, CSV import, suppliers, goods receipts, sales matrix, cash summary, stock, adjustments, transfers
+- [ ] **2. Offline** sales matrix
+- [ ] **3. Control** — stocktakes, returns, restock lists, document corrections & period closing, exports, monthly report
+- [ ] **4. Analytics & settings** — dashboard, profitability, discrepancy analytics, branding
+- [ ] **5. Maturity** — Docker, GitHub Actions CI/CD, Railway
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Documentation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Technical specification](docs/spec/technical.md) — data model, rules, architecture
+- [Business requirements](docs/spec/business.md) — how the system works, in plain language
+- [Claude Code setup](SETUP.md) — how this repo is configured for AI-assisted development
+
+## Built with Claude Code
+
+Development is AI-assisted with Claude Code. The repository carries its own configuration:
+`CLAUDE.md` with project rules, path-scoped rules, reusable skills (for example `add-feature`, `db-migration`)
+and hooks that format and lint every edit, block destructive database commands and run the type check and
+tests before a task is considered done.
