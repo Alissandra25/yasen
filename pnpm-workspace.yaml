@@ -1,4 +1,9 @@
 allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
   esbuild: false
   sharp: false
   unrs-resolver: false
+permissions:
+  drizzle-kit:
+    skills: true
