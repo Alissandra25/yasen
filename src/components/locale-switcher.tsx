@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { routing } from "@/i18n/routing";
 
 // Language endonyms are proper nouns, not UI text to translate per locale.
@@ -15,12 +15,15 @@ export function LocaleSwitcher() {
   const t = useTranslations("locale");
   const locale = useLocale();
   const pathname = usePathname();
-  const router = useRouter();
 
   function changeLocale(nextLocale: string) {
     const segments = pathname.split("/");
     segments[1] = nextLocale;
-    router.push(segments.join("/"));
+    // A full navigation, not router.push: switching locale changes the root layout's own
+    // dynamic segment, which Next.js would otherwise remount via a client-side RSC transition.
+    // next-themes' anti-flash <script> only runs when parsed from real server HTML, not when
+    // inserted by a client-side React render, so that remount silently breaks theming.
+    window.location.assign(segments.join("/"));
   }
 
   return (
