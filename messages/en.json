@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "title": "Yasen",
+    "description": "Inventory and sales for a small retail shop."
+  },
+  "home": {
+    "title": "Yasen",
+    "subtitle": "Inventory and sales for a small shop.",
+    "stageNotice": "Stage 0 (foundation) is in progress. The owner dashboard isn't built yet."
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggleLabel": "Toggle color theme"
+  },
+  "locale": {
+    "switchLabel": "Choose language"
+  }
+}
