@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   addDaysToDateString,
+  businessCurrentMonth,
   businessToday,
   compareDateStrings,
   dateOnlySchema,
   daysBetween,
+  daysInMonth,
   formatInBusinessTimeZone,
+  monthStartDate,
+  shiftMonth,
 } from "./dates";
 
 describe("dateOnlySchema", () => {
@@ -16,6 +20,42 @@ describe("dateOnlySchema", () => {
   it("rejects anything else", () => {
     expect(() => dateOnlySchema.parse("10/08/2026")).toThrow();
     expect(() => dateOnlySchema.parse("2026-10-08T00:00:00Z")).toThrow();
+  });
+});
+
+describe("monthStartDate", () => {
+  it("returns the first day of the month", () => {
+    expect(monthStartDate("2026-10")).toBe("2026-10-01");
+  });
+});
+
+describe("daysInMonth", () => {
+  it("lists every date in a 31-day month", () => {
+    const days = daysInMonth("2026-10");
+    expect(days).toHaveLength(31);
+    expect(days[0]).toBe("2026-10-01");
+    expect(days.at(-1)).toBe("2026-10-31");
+  });
+
+  it("handles February in a leap year", () => {
+    expect(daysInMonth("2028-02")).toHaveLength(29);
+  });
+});
+
+describe("shiftMonth", () => {
+  it("rolls over into the next year", () => {
+    expect(shiftMonth("2026-12", 1)).toBe("2027-01");
+  });
+
+  it("rolls back into the previous year", () => {
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+  });
+});
+
+describe("businessCurrentMonth", () => {
+  it("derives the month from businessToday", () => {
+    const now = new Date("2026-10-08T22:30:00Z");
+    expect(businessCurrentMonth("Europe/Kyiv", now)).toBe("2026-10");
   });
 });
 

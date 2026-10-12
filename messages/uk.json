@@ -26,7 +26,8 @@
     "categoriesLink": "Категорії",
     "suppliersLink": "Постачальники",
     "productsLink": "Товари",
-    "receiptsLink": "Прийняття товару"
+    "receiptsLink": "Прийняття товару",
+    "salesLink": "Продажі"
   },
   "login": {
     "title": "Вхід",
@@ -117,6 +118,22 @@
     "selectForBulkAction": "Вибрати",
     "confirmSelected": "Підтвердити перевірені ({count})",
     "importLink": "Імпорт з CSV"
+  },
+  "sales": {
+    "title": "Матриця продажів",
+    "prevMonth": "← Попередній місяць",
+    "nextMonth": "Наступний місяць →",
+    "allCategories": "Усі категорії",
+    "splitPaymentMethod": "Розділити готівка / картка",
+    "productColumn": "Товар",
+    "stockAtStartColumn": "Залишок на початок",
+    "stockNowColumn": "Залишок зараз",
+    "quantityLabel": "Кількість",
+    "cashLabel": "Готівка",
+    "cardLabel": "Картка",
+    "save": "Зберегти",
+    "saved": "Збережено.",
+    "noPriceError": "Для одного з введених товарів ще не вказано ціну продажу — спочатку встановіть ціну."
   },
   "receipts": {
     "title": "Прийняття товару",

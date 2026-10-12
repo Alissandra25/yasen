@@ -26,7 +26,8 @@
     "categoriesLink": "Категории",
     "suppliersLink": "Поставщики",
     "productsLink": "Товары",
-    "receiptsLink": "Приёмка товара"
+    "receiptsLink": "Приёмка товара",
+    "salesLink": "Продажи"
   },
   "login": {
     "title": "Вход",
@@ -117,6 +118,22 @@
     "selectForBulkAction": "Выбрать",
     "confirmSelected": "Подтвердить проверенные ({count})",
     "importLink": "Импорт из CSV"
+  },
+  "sales": {
+    "title": "Матрица продаж",
+    "prevMonth": "← Предыдущий месяц",
+    "nextMonth": "Следующий месяц →",
+    "allCategories": "Все категории",
+    "splitPaymentMethod": "Разделить наличные / карта",
+    "productColumn": "Товар",
+    "stockAtStartColumn": "Остаток на начало",
+    "stockNowColumn": "Остаток сейчас",
+    "quantityLabel": "Количество",
+    "cashLabel": "Наличные",
+    "cardLabel": "Карта",
+    "save": "Сохранить",
+    "saved": "Сохранено.",
+    "noPriceError": "Для одного из введённых товаров ещё не указана цена продажи — сначала установите цену."
   },
   "receipts": {
     "title": "Приёмка товара",

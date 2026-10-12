@@ -85,6 +85,8 @@ At launch, sales are entered **by the owner after the fact** — e.g. in the eve
   - **On:** each cell is two fields (e.g. 50 pcs cash + 5 pcs card). Exact breakdown per item.
   - **Off (default):** one cell for quantity; the owner enters however is convenient (may attribute everything to cash).
 - Model consequence: with the split on, sales store quantity separately per payment method (payment_method per record); with it off, payment_method may be empty or a single default.
+- **"Creates / updates" resolved as append-only deltas, not in-place edits:** editing a cell never updates an existing sales row — it inserts one new row holding the SIGNED DIFFERENCE between the new value and the cell's current total (which can be negative, correcting a previous entry down). The displayed cell value is always the sum of every row for that (product, day[, payment method]). This is what makes "creates / updates" (3.5) consistent with "no conflicts — append only" (3.6): the append-only rule isn't only about the offline queue, it's how every matrix edit is written, online or not — so Stage 2's offline sync is really the same code path, not a special case. A sale needs a known sale price (price_history effective on that day with a non-null sale_price); if none exists yet, the save is rejected with a clear message instead of recording a priceless sale.
+- **"Stock at the start of the period" is reconstructed, not stored:** start = current stock − receipts since the period start + sales since the period start (both already queried for the matrix itself). No daily snapshots are kept, consistent with the same simplification restock rules rely on (3.7).
 
 ### 3.6 Offline Mode (Sales Matrix Only)
 

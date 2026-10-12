@@ -47,6 +47,12 @@ export async function AppHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
         <Link
+          href={`/${locale}/sales`}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          {t("salesLink")}
+        </Link>
+        <Link
           href={`/${locale}/receipts`}
           className="text-sm text-muted-foreground hover:text-foreground"
         >

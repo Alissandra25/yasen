@@ -26,7 +26,8 @@
     "categoriesLink": "Categories",
     "suppliersLink": "Suppliers",
     "productsLink": "Products",
-    "receiptsLink": "Goods receipts"
+    "receiptsLink": "Goods receipts",
+    "salesLink": "Sales"
   },
   "login": {
     "title": "Log in",
@@ -117,6 +118,22 @@
     "selectForBulkAction": "Select",
     "confirmSelected": "Confirm reviewed ({count})",
     "importLink": "Import from CSV"
+  },
+  "sales": {
+    "title": "Sales matrix",
+    "prevMonth": "← Previous month",
+    "nextMonth": "Next month →",
+    "allCategories": "All categories",
+    "splitPaymentMethod": "Split cash / card",
+    "productColumn": "Product",
+    "stockAtStartColumn": "Stock at start",
+    "stockNowColumn": "Stock now",
+    "quantityLabel": "Quantity",
+    "cashLabel": "Cash",
+    "cardLabel": "Card",
+    "save": "Save",
+    "saved": "Saved.",
+    "noPriceError": "One of the entered products has no sale price set yet — set a price first."
   },
   "receipts": {
     "title": "Goods receipts",

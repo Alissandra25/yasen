@@ -73,3 +73,37 @@ export function daysBetween(a: string, b: string): number {
     (dateOnlyToUtcEpoch(b) - dateOnlyToUtcEpoch(a)) / MS_PER_DAY,
   );
 }
+
+/** A calendar month as a 'YYYY-MM' string. "Since start of month" (spec 3.7/4.4) is always in this unit. */
+export const monthOnlySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}$/, "Expected a YYYY-MM month.");
+
+/** The first day of a 'YYYY-MM' month, as a date-only string. */
+export function monthStartDate(month: string): string {
+  monthOnlySchema.parse(month);
+  return `${month}-01`;
+}
+
+/** Every date-only string in a 'YYYY-MM' month, in order. */
+export function daysInMonth(month: string): string[] {
+  const [year, m] = monthOnlySchema.parse(month).split("-").map(Number);
+  const count = new Date(Date.UTC(year, m, 0)).getUTCDate();
+  const start = monthStartDate(month);
+  return Array.from({ length: count }, (_, i) => addDaysToDateString(start, i));
+}
+
+/** Adds (or subtracts) whole months to a 'YYYY-MM' month string. */
+export function shiftMonth(month: string, deltaMonths: number): string {
+  const [year, m] = monthOnlySchema.parse(month).split("-").map(Number);
+  const shifted = new Date(Date.UTC(year, m - 1 + deltaMonths, 1));
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** The calendar month containing "today" in the business time zone. */
+export function businessCurrentMonth(
+  timeZone: string,
+  now: Date = new Date(),
+): string {
+  return businessToday(timeZone, now).slice(0, 7);
+}
