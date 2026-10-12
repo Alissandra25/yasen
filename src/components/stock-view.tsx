@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { StockAdjustRow } from "@/components/stock-adjust-row";
 import type { InventoryRow } from "@/server/services/inventory";
 
 export function StockView({
@@ -63,33 +64,19 @@ export function StockView({
             <th className="py-1 pr-4">{t("skuColumn")}</th>
             <th className="py-1 pr-4">{t("locationColumn")}</th>
             <th className="py-1 pr-4 text-right">{t("quantityColumn")}</th>
+            <th className="py-1 pr-4" />
           </tr>
         </thead>
         <tbody>
           {visible.map((row) => (
-            <tr
+            <StockAdjustRow
               key={`${row.productId}-${row.locationId}`}
-              className="border-t border-border"
-            >
-              <td className="py-1 pr-4 text-foreground">{row.productName}</td>
-              <td className="py-1 pr-4 text-muted-foreground">
-                {row.sku ?? ""}
-              </td>
-              <td className="py-1 pr-4 text-foreground">{row.locationName}</td>
-              <td
-                className={
-                  row.quantity < 0
-                    ? "py-1 pr-4 text-right font-medium text-destructive"
-                    : "py-1 pr-4 text-right text-foreground"
-                }
-              >
-                {row.quantity}
-              </td>
-            </tr>
+              row={row}
+            />
           ))}
           {visible.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-2 text-sm text-muted-foreground">
+              <td colSpan={5} className="py-2 text-sm text-muted-foreground">
                 {t("empty")}
               </td>
             </tr>

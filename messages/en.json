@@ -128,7 +128,19 @@
     "skuColumn": "SKU",
     "locationColumn": "Location",
     "quantityColumn": "Quantity",
-    "empty": "No stock to show."
+    "empty": "No stock to show.",
+    "adjust": "Adjust",
+    "newQuantityLabel": "Actual quantity",
+    "reasonLabel": "Reason",
+    "reason": {
+      "breakage": "Breakage",
+      "shortage": "Shortage",
+      "mis_sort": "Mis-sort",
+      "other": "Other"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "invalidInput": "Enter a quantity and choose a reason."
   },
   "cashSummary": {
     "title": "Daily cash summary",
