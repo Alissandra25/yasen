@@ -1,6 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Geist_Mono, IBM_Plex_Serif } from "next/font/google";
+import { Geist_Mono, IBM_Plex_Serif, Play } from "next/font/google";
 import type { Metadata } from "next";
 import { QueryProvider } from "@/components/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -15,6 +15,12 @@ const ibmPlexSerif = IBM_Plex_Serif({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
+
+const play = Play({
+  variable: "--font-play",
+  subsets: ["cyrillic-ext", "latin"],
+  weight: ["400", "700"]
+})
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -44,7 +50,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${ibmPlexSerif.variable} ${geistMono.variable} min-h-full flex flex-col antialiased`}
+        className={`${ibmPlexSerif.variable} ${geistMono.variable} ${play.variable} min-h-full flex flex-col antialiased`}
       >
         <NextIntlClientProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
