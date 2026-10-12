@@ -40,7 +40,8 @@
     "wrongPassword": "Текущий пароль неверен.",
     "referenceDataTitle": "Справочные данные",
     "locationsLink": "Места хранения",
-    "categoriesLink": "Категории"
+    "categoriesLink": "Категории",
+    "suppliersLink": "Поставщики"
   },
   "locations": {
     "title": "Места хранения",
@@ -68,5 +69,22 @@
     "archive": "Архивировать",
     "dragHandle": "Перетащите для изменения порядка",
     "invalidInput": "Введите название."
+  },
+  "suppliers": {
+    "title": "Поставщики",
+    "empty": "Пока нет ни одного поставщика.",
+    "nameLabel": "Название",
+    "contactsLabel": "Контакты",
+    "noteLabel": "Примечание",
+    "add": "Добавить поставщика",
+    "edit": "Редактировать",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "archive": "Архивировать",
+    "invalidInput": "Введите название.",
+    "needsReviewBadge": "Требует проверки",
+    "needsReviewFilter": "Только требующие проверки",
+    "selectForBulkAction": "Выбрать",
+    "confirmSelected": "Подтвердить проверенные ({count})"
   }
 }

@@ -40,7 +40,8 @@
     "wrongPassword": "Current password is incorrect.",
     "referenceDataTitle": "Reference data",
     "locationsLink": "Locations",
-    "categoriesLink": "Categories"
+    "categoriesLink": "Categories",
+    "suppliersLink": "Suppliers"
   },
   "locations": {
     "title": "Locations",
@@ -68,5 +69,22 @@
     "archive": "Archive",
     "dragHandle": "Drag to reorder",
     "invalidInput": "Enter a name."
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "empty": "No suppliers yet.",
+    "nameLabel": "Name",
+    "contactsLabel": "Contacts",
+    "noteLabel": "Note",
+    "add": "Add supplier",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "archive": "Archive",
+    "invalidInput": "Enter a name.",
+    "needsReviewBadge": "Needs review",
+    "needsReviewFilter": "Needs review only",
+    "selectForBulkAction": "Select",
+    "confirmSelected": "Confirm reviewed ({count})"
   }
 }

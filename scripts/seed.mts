@@ -5,6 +5,7 @@ import "dotenv/config";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { businessesTable } from "@/db/schema/businesses";
+import { suppliersTable } from "@/db/schema/suppliers";
 import { usersTable } from "@/db/schema/users";
 import { hashPassword } from "@/server/services/auth";
 
@@ -59,4 +60,21 @@ if (!ownerEmail || !ownerPassword) {
   } else {
     console.log("Owner user already seeded:", ownerEmail);
   }
+}
+
+// The hidden system supplier (spec 3.11), used once suppliers_enabled can be turned off
+// (stage 4). Never shown in the reference list; the name is internal only.
+const businessSuppliers = await db
+  .select()
+  .from(suppliersTable)
+  .where(eq(suppliersTable.businessId, businessId));
+const hasSystemSupplier = businessSuppliers.some((supplier) => supplier.isSystem);
+
+if (!hasSystemSupplier) {
+  await db
+    .insert(suppliersTable)
+    .values({ businessId, name: "(no supplier)", isSystem: true });
+  console.log("Seeded hidden system supplier.");
+} else {
+  console.log("Hidden system supplier already seeded.");
 }

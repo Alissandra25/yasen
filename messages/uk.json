@@ -40,7 +40,8 @@
     "wrongPassword": "Поточний пароль неправильний.",
     "referenceDataTitle": "Довідкові дані",
     "locationsLink": "Місця зберігання",
-    "categoriesLink": "Категорії"
+    "categoriesLink": "Категорії",
+    "suppliersLink": "Постачальники"
   },
   "locations": {
     "title": "Місця зберігання",
@@ -68,5 +69,22 @@
     "archive": "Архівувати",
     "dragHandle": "Перетягніть для зміни порядку",
     "invalidInput": "Введіть назву."
+  },
+  "suppliers": {
+    "title": "Постачальники",
+    "empty": "Поки немає жодного постачальника.",
+    "nameLabel": "Назва",
+    "contactsLabel": "Контакти",
+    "noteLabel": "Примітка",
+    "add": "Додати постачальника",
+    "edit": "Редагувати",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "archive": "Архівувати",
+    "invalidInput": "Введіть назву.",
+    "needsReviewBadge": "Потребує перевірки",
+    "needsReviewFilter": "Лише ті, що потребують перевірки",
+    "selectForBulkAction": "Вибрати",
+    "confirmSelected": "Підтвердити перевірені ({count})"
   }
 }
