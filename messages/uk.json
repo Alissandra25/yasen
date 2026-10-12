@@ -27,7 +27,8 @@
     "suppliersLink": "Постачальники",
     "productsLink": "Товари",
     "receiptsLink": "Прийняття товару",
-    "salesLink": "Продажі"
+    "salesLink": "Продажі",
+    "stockLink": "Залишки"
   },
   "login": {
     "title": "Вхід",
@@ -118,6 +119,16 @@
     "selectForBulkAction": "Вибрати",
     "confirmSelected": "Підтвердити перевірені ({count})",
     "importLink": "Імпорт з CSV"
+  },
+  "stock": {
+    "title": "Залишки",
+    "allCategories": "Усі категорії",
+    "allLocations": "Усі місця",
+    "productColumn": "Товар",
+    "skuColumn": "Артикул",
+    "locationColumn": "Місце",
+    "quantityColumn": "Кількість",
+    "empty": "Немає даних для відображення."
   },
   "cashSummary": {
     "title": "Денна касова зведення",

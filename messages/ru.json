@@ -27,7 +27,8 @@
     "suppliersLink": "Поставщики",
     "productsLink": "Товары",
     "receiptsLink": "Приёмка товара",
-    "salesLink": "Продажи"
+    "salesLink": "Продажи",
+    "stockLink": "Остатки"
   },
   "login": {
     "title": "Вход",
@@ -118,6 +119,16 @@
     "selectForBulkAction": "Выбрать",
     "confirmSelected": "Подтвердить проверенные ({count})",
     "importLink": "Импорт из CSV"
+  },
+  "stock": {
+    "title": "Остатки",
+    "allCategories": "Все категории",
+    "allLocations": "Все места",
+    "productColumn": "Товар",
+    "skuColumn": "Артикул",
+    "locationColumn": "Место",
+    "quantityColumn": "Количество",
+    "empty": "Нет данных для отображения."
   },
   "cashSummary": {
     "title": "Дневная кассовая сводка",

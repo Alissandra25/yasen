@@ -27,7 +27,8 @@
     "suppliersLink": "Suppliers",
     "productsLink": "Products",
     "receiptsLink": "Goods receipts",
-    "salesLink": "Sales"
+    "salesLink": "Sales",
+    "stockLink": "Stock"
   },
   "login": {
     "title": "Log in",
@@ -118,6 +119,16 @@
     "selectForBulkAction": "Select",
     "confirmSelected": "Confirm reviewed ({count})",
     "importLink": "Import from CSV"
+  },
+  "stock": {
+    "title": "Stock",
+    "allCategories": "All categories",
+    "allLocations": "All locations",
+    "productColumn": "Product",
+    "skuColumn": "SKU",
+    "locationColumn": "Location",
+    "quantityColumn": "Quantity",
+    "empty": "No stock to show."
   },
   "cashSummary": {
     "title": "Daily cash summary",
