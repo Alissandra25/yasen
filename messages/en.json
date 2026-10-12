@@ -25,7 +25,8 @@
     "locationsLink": "Locations",
     "categoriesLink": "Categories",
     "suppliersLink": "Suppliers",
-    "productsLink": "Products"
+    "productsLink": "Products",
+    "receiptsLink": "Goods receipts"
   },
   "login": {
     "title": "Log in",
@@ -116,6 +117,38 @@
     "selectForBulkAction": "Select",
     "confirmSelected": "Confirm reviewed ({count})",
     "importLink": "Import from CSV"
+  },
+  "receipts": {
+    "title": "Goods receipts",
+    "empty": "No receipts yet.",
+    "dateColumn": "Date",
+    "supplierColumn": "Supplier",
+    "linesColumn": "Lines",
+    "quantityColumn": "Total quantity",
+    "newReceiptTitle": "New receipt",
+    "supplierLabel": "Supplier",
+    "selectSupplier": "Select a supplier",
+    "newSupplierLabel": "Or type a new supplier name",
+    "defaultLocationLabel": "Default location",
+    "lineProductLabel": "Product",
+    "selectProduct": "Select a product",
+    "newProductOption": "— New product —",
+    "newProductNameLabel": "New product name",
+    "newProductCategoryLabel": "Category",
+    "newProductSkuLabel": "SKU",
+    "lineLocationLabel": "Location",
+    "quantityLabel": "Quantity",
+    "purchasePriceLabel": "Purchase price",
+    "salePriceLabel": "Sale price",
+    "addLine": "Add line",
+    "removeLine": "Remove",
+    "splitLine": "Split",
+    "selectLine": "Select",
+    "assignLocationToSelected": "Assign location to selected",
+    "apply": "Apply",
+    "post": "Post receipt",
+    "posted": "Receipt posted.",
+    "invalidInput": "Check the supplier, locations and prices, and that every new product has a name and category."
   },
   "csvImport": {
     "applyToAll": "Apply to all:",

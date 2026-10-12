@@ -25,7 +25,8 @@
     "locationsLink": "Места хранения",
     "categoriesLink": "Категории",
     "suppliersLink": "Поставщики",
-    "productsLink": "Товары"
+    "productsLink": "Товары",
+    "receiptsLink": "Приёмка товара"
   },
   "login": {
     "title": "Вход",
@@ -116,6 +117,38 @@
     "selectForBulkAction": "Выбрать",
     "confirmSelected": "Подтвердить проверенные ({count})",
     "importLink": "Импорт из CSV"
+  },
+  "receipts": {
+    "title": "Приёмка товара",
+    "empty": "Пока нет ни одной приёмки.",
+    "dateColumn": "Дата",
+    "supplierColumn": "Поставщик",
+    "linesColumn": "Строки",
+    "quantityColumn": "Общее количество",
+    "newReceiptTitle": "Новая приёмка",
+    "supplierLabel": "Поставщик",
+    "selectSupplier": "Выберите поставщика",
+    "newSupplierLabel": "Или введите название нового поставщика",
+    "defaultLocationLabel": "Место по умолчанию",
+    "lineProductLabel": "Товар",
+    "selectProduct": "Выберите товар",
+    "newProductOption": "— Новый товар —",
+    "newProductNameLabel": "Название нового товара",
+    "newProductCategoryLabel": "Категория",
+    "newProductSkuLabel": "Артикул",
+    "lineLocationLabel": "Место",
+    "quantityLabel": "Количество",
+    "purchasePriceLabel": "Закупочная цена",
+    "salePriceLabel": "Цена продажи",
+    "addLine": "Добавить строку",
+    "removeLine": "Удалить",
+    "splitLine": "Разделить",
+    "selectLine": "Выбрать",
+    "assignLocationToSelected": "Назначить место выбранным",
+    "apply": "Применить",
+    "post": "Провести приёмку",
+    "posted": "Приёмка проведена.",
+    "invalidInput": "Проверьте поставщика, места и цены, а также что у каждого нового товара есть название и категория."
   },
   "csvImport": {
     "applyToAll": "Применить ко всем:",

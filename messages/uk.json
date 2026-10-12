@@ -25,7 +25,8 @@
     "locationsLink": "Місця зберігання",
     "categoriesLink": "Категорії",
     "suppliersLink": "Постачальники",
-    "productsLink": "Товари"
+    "productsLink": "Товари",
+    "receiptsLink": "Прийняття товару"
   },
   "login": {
     "title": "Вхід",
@@ -116,6 +117,38 @@
     "selectForBulkAction": "Вибрати",
     "confirmSelected": "Підтвердити перевірені ({count})",
     "importLink": "Імпорт з CSV"
+  },
+  "receipts": {
+    "title": "Прийняття товару",
+    "empty": "Поки немає жодного прийняття.",
+    "dateColumn": "Дата",
+    "supplierColumn": "Постачальник",
+    "linesColumn": "Рядки",
+    "quantityColumn": "Загальна кількість",
+    "newReceiptTitle": "Нове прийняття",
+    "supplierLabel": "Постачальник",
+    "selectSupplier": "Виберіть постачальника",
+    "newSupplierLabel": "Або введіть назву нового постачальника",
+    "defaultLocationLabel": "Місце за замовчуванням",
+    "lineProductLabel": "Товар",
+    "selectProduct": "Виберіть товар",
+    "newProductOption": "— Новий товар —",
+    "newProductNameLabel": "Назва нового товару",
+    "newProductCategoryLabel": "Категорія",
+    "newProductSkuLabel": "Артикул",
+    "lineLocationLabel": "Місце",
+    "quantityLabel": "Кількість",
+    "purchasePriceLabel": "Закупівельна ціна",
+    "salePriceLabel": "Ціна продажу",
+    "addLine": "Додати рядок",
+    "removeLine": "Видалити",
+    "splitLine": "Розділити",
+    "selectLine": "Вибрати",
+    "assignLocationToSelected": "Призначити місце вибраним",
+    "apply": "Застосувати",
+    "post": "Провести прийняття",
+    "posted": "Прийняття проведено.",
+    "invalidInput": "Перевірте постачальника, місця та ціни, а також що кожен новий товар має назву й категорію."
   },
   "csvImport": {
     "applyToAll": "Застосувати до всіх:",
