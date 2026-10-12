@@ -1,13 +1,19 @@
-# Current stage: 1 — MVP
+# Current stage: 1 — MVP (feature-complete; see note below)
 
 Build only what is listed here. Anything from a later stage: stop and ask.
 
-## Stage 1 — MVP
+## Stage 1 — MVP (done)
 
-- Locations, categories (with order), products, archive, CSV import.
-- Suppliers (always on), goods receipts (location per line, split line).
-- Sales matrix (cash/card split, `client_uuid`, append-only), daily cash summary + discount adjustment.
-- Stock view with negatives highlighted, manual adjustments, transfers.
+- Locations, categories (with order), products, archive, CSV import. Done.
+- Suppliers (always on), goods receipts (location per line, split line). Done.
+- Sales matrix (cash/card split, `client_uuid`, append-only), daily cash summary + discount adjustment. Done.
+- Stock view with negatives highlighted, manual adjustments, transfers. Done.
+
+All eleven Stage 1 milestones (owner login through transfers) are built, tested (unit tests +
+a real-DB integration smoke test per milestone) and committed. Not yet done, deliberately left
+for a human: a final end-to-end walkthrough in the browser as the owner, and moving to Stage 2
+once that's confirmed. Two small pre-existing Stage 0 items are still open, blocked on
+credentials (see below) — they don't block using the MVP.
 
 ## Stage 0 — Foundation (done, except where noted)
 
