@@ -40,6 +40,12 @@ export default async function SettingsPage() {
           >
             {t("suppliersLink")}
           </Link>
+          <Link
+            href={`/${locale}/settings/products`}
+            className="text-sm text-primary underline-offset-4 hover:underline"
+          >
+            {t("productsLink")}
+          </Link>
         </CardContent>
       </Card>
     </div>

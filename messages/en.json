@@ -41,7 +41,8 @@
     "referenceDataTitle": "Reference data",
     "locationsLink": "Locations",
     "categoriesLink": "Categories",
-    "suppliersLink": "Suppliers"
+    "suppliersLink": "Suppliers",
+    "productsLink": "Products"
   },
   "locations": {
     "title": "Locations",
@@ -84,6 +85,33 @@
     "invalidInput": "Enter a name.",
     "needsReviewBadge": "Needs review",
     "needsReviewFilter": "Needs review only",
+    "selectForBulkAction": "Select",
+    "confirmSelected": "Confirm reviewed ({count})"
+  },
+  "products": {
+    "title": "Products",
+    "empty": "No products yet.",
+    "nameLabel": "Name",
+    "skuLabel": "SKU",
+    "categoryLabel": "Category",
+    "selectCategory": "Select a category",
+    "allCategories": "All categories",
+    "supplierLabel": "Main supplier",
+    "noSupplier": "No supplier",
+    "minStockLabel": "Minimum stock",
+    "purchasePriceLabel": "Purchase price",
+    "salePriceLabel": "Sale price",
+    "leaveBlankToKeep": "Leave blank to keep",
+    "add": "Add product",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "archive": "Archive",
+    "invalidInput": "Check the required fields and price format.",
+    "needsReviewBadge": "Needs review",
+    "needsReviewFilter": "Needs review only",
+    "archiveCandidateBadge": "Archive candidate",
+    "archiveCandidateFilter": "Archive candidates only",
     "selectForBulkAction": "Select",
     "confirmSelected": "Confirm reviewed ({count})"
   }

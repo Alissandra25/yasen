@@ -41,7 +41,8 @@
     "referenceDataTitle": "Справочные данные",
     "locationsLink": "Места хранения",
     "categoriesLink": "Категории",
-    "suppliersLink": "Поставщики"
+    "suppliersLink": "Поставщики",
+    "productsLink": "Товары"
   },
   "locations": {
     "title": "Места хранения",
@@ -84,6 +85,33 @@
     "invalidInput": "Введите название.",
     "needsReviewBadge": "Требует проверки",
     "needsReviewFilter": "Только требующие проверки",
+    "selectForBulkAction": "Выбрать",
+    "confirmSelected": "Подтвердить проверенные ({count})"
+  },
+  "products": {
+    "title": "Товары",
+    "empty": "Пока нет ни одного товара.",
+    "nameLabel": "Название",
+    "skuLabel": "Артикул",
+    "categoryLabel": "Категория",
+    "selectCategory": "Выберите категорию",
+    "allCategories": "Все категории",
+    "supplierLabel": "Основной поставщик",
+    "noSupplier": "Без поставщика",
+    "minStockLabel": "Минимальный остаток",
+    "purchasePriceLabel": "Закупочная цена",
+    "salePriceLabel": "Цена продажи",
+    "leaveBlankToKeep": "Оставьте пустым, чтобы не менять",
+    "add": "Добавить товар",
+    "edit": "Редактировать",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "archive": "Архивировать",
+    "invalidInput": "Проверьте обязательные поля и формат цены.",
+    "needsReviewBadge": "Требует проверки",
+    "needsReviewFilter": "Только требующие проверки",
+    "archiveCandidateBadge": "Кандидат на архивирование",
+    "archiveCandidateFilter": "Только кандидаты на архивирование",
     "selectForBulkAction": "Выбрать",
     "confirmSelected": "Подтвердить проверенные ({count})"
   }

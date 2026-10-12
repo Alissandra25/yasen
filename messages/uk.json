@@ -41,7 +41,8 @@
     "referenceDataTitle": "Довідкові дані",
     "locationsLink": "Місця зберігання",
     "categoriesLink": "Категорії",
-    "suppliersLink": "Постачальники"
+    "suppliersLink": "Постачальники",
+    "productsLink": "Товари"
   },
   "locations": {
     "title": "Місця зберігання",
@@ -84,6 +85,33 @@
     "invalidInput": "Введіть назву.",
     "needsReviewBadge": "Потребує перевірки",
     "needsReviewFilter": "Лише ті, що потребують перевірки",
+    "selectForBulkAction": "Вибрати",
+    "confirmSelected": "Підтвердити перевірені ({count})"
+  },
+  "products": {
+    "title": "Товари",
+    "empty": "Поки немає жодного товару.",
+    "nameLabel": "Назва",
+    "skuLabel": "Артикул",
+    "categoryLabel": "Категорія",
+    "selectCategory": "Виберіть категорію",
+    "allCategories": "Усі категорії",
+    "supplierLabel": "Основний постачальник",
+    "noSupplier": "Без постачальника",
+    "minStockLabel": "Мінімальний залишок",
+    "purchasePriceLabel": "Закупівельна ціна",
+    "salePriceLabel": "Ціна продажу",
+    "leaveBlankToKeep": "Залиште порожнім, щоб не змінювати",
+    "add": "Додати товар",
+    "edit": "Редагувати",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "archive": "Архівувати",
+    "invalidInput": "Перевірте обов'язкові поля та формат ціни.",
+    "needsReviewBadge": "Потребує перевірки",
+    "needsReviewFilter": "Лише ті, що потребують перевірки",
+    "archiveCandidateBadge": "Кандидат на архівування",
+    "archiveCandidateFilter": "Лише кандидати на архівування",
     "selectForBulkAction": "Вибрати",
     "confirmSelected": "Підтвердити перевірені ({count})"
   }
