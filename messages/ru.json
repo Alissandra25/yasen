@@ -39,7 +39,8 @@
     "invalidInput": "Новый пароль должен содержать не менее 8 символов.",
     "wrongPassword": "Текущий пароль неверен.",
     "referenceDataTitle": "Справочные данные",
-    "locationsLink": "Места хранения"
+    "locationsLink": "Места хранения",
+    "categoriesLink": "Категории"
   },
   "locations": {
     "title": "Места хранения",
@@ -55,5 +56,17 @@
     "save": "Сохранить",
     "cancel": "Отмена",
     "invalidInput": "Введите название и выберите тип."
+  },
+  "categories": {
+    "title": "Категории",
+    "nameLabel": "Название",
+    "addCategory": "Добавить категорию",
+    "addSubcategory": "Добавить подкатегорию",
+    "rename": "Переименовать",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "archive": "Архивировать",
+    "dragHandle": "Перетащите для изменения порядка",
+    "invalidInput": "Введите название."
   }
 }

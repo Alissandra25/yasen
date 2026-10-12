@@ -21,12 +21,18 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle>{t("referenceDataTitle")}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-2">
           <Link
             href={`/${locale}/settings/locations`}
             className="text-sm text-primary underline-offset-4 hover:underline"
           >
             {t("locationsLink")}
+          </Link>
+          <Link
+            href={`/${locale}/settings/categories`}
+            className="text-sm text-primary underline-offset-4 hover:underline"
+          >
+            {t("categoriesLink")}
           </Link>
         </CardContent>
       </Card>

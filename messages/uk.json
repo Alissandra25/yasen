@@ -39,7 +39,8 @@
     "invalidInput": "Новий пароль має містити щонайменше 8 символів.",
     "wrongPassword": "Поточний пароль неправильний.",
     "referenceDataTitle": "Довідкові дані",
-    "locationsLink": "Місця зберігання"
+    "locationsLink": "Місця зберігання",
+    "categoriesLink": "Категорії"
   },
   "locations": {
     "title": "Місця зберігання",
@@ -55,5 +56,17 @@
     "save": "Зберегти",
     "cancel": "Скасувати",
     "invalidInput": "Введіть назву та виберіть тип."
+  },
+  "categories": {
+    "title": "Категорії",
+    "nameLabel": "Назва",
+    "addCategory": "Додати категорію",
+    "addSubcategory": "Додати підкатегорію",
+    "rename": "Перейменувати",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "archive": "Архівувати",
+    "dragHandle": "Перетягніть для зміни порядку",
+    "invalidInput": "Введіть назву."
   }
 }

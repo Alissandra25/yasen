@@ -39,7 +39,8 @@
     "invalidInput": "The new password must be at least 8 characters.",
     "wrongPassword": "Current password is incorrect.",
     "referenceDataTitle": "Reference data",
-    "locationsLink": "Locations"
+    "locationsLink": "Locations",
+    "categoriesLink": "Categories"
   },
   "locations": {
     "title": "Locations",
@@ -55,5 +56,17 @@
     "save": "Save",
     "cancel": "Cancel",
     "invalidInput": "Enter a name and choose a type."
+  },
+  "categories": {
+    "title": "Categories",
+    "nameLabel": "Name",
+    "addCategory": "Add category",
+    "addSubcategory": "Add subcategory",
+    "rename": "Rename",
+    "save": "Save",
+    "cancel": "Cancel",
+    "archive": "Archive",
+    "dragHandle": "Drag to reorder",
+    "invalidInput": "Enter a name."
   }
 }
