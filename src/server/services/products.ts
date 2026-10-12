@@ -5,6 +5,7 @@ import { inventoryTable } from "@/db/schema/inventory";
 import { locationsTable } from "@/db/schema/locations";
 import { priceHistoryTable } from "@/db/schema/price-history";
 import { productsTable } from "@/db/schema/products";
+import { normalizeName } from "@/lib/strings";
 
 type WritableDbOrTx = Pick<
   ReturnType<typeof getDb>,
@@ -40,7 +41,7 @@ export interface CreateProductInput extends ProductFields {
   needsReview?: boolean;
 }
 
-async function maybeInsertPriceHistory(
+export async function maybeInsertPriceHistory(
   db: WritableDbOrTx,
   productId: number,
   purchasePrice: number | null,
@@ -253,4 +254,122 @@ export async function getArchiveCandidateProductIds(
       isArchiveCandidate(totals.quantity, totals.lastMovementAt, cutoff),
     )
     .map(([productId]) => productId);
+}
+
+export interface ProductCsvRow {
+  name: string;
+  sku: string | null;
+  categoryId: number;
+  defaultSupplierId: number | null;
+  minStock: number;
+  purchasePrice: number | null;
+  salePrice: number | null;
+  effectiveFrom: string | null;
+}
+
+export interface ProductImportConflict {
+  csvRow: ProductCsvRow;
+  existing: Product;
+}
+
+export interface ProductImportResult {
+  createdCount: number;
+  conflicts: ProductImportConflict[];
+}
+
+/** Same new-vs-conflict split as importSuppliersFromRows (spec 3.2), matched by product name. */
+export async function importProductsFromRows(
+  db: WritableDbOrTx,
+  businessId: number,
+  rows: ProductCsvRow[],
+): Promise<ProductImportResult> {
+  const existingRows = await db
+    .select()
+    .from(productsTable)
+    .where(eq(productsTable.businessId, businessId));
+  const byName = new Map(
+    existingRows.map((row) => [normalizeName(row.name), row]),
+  );
+
+  let createdCount = 0;
+  const conflicts: ProductImportConflict[] = [];
+
+  for (const row of rows) {
+    const key = normalizeName(row.name);
+    const match = byName.get(key);
+    if (match) {
+      conflicts.push({ csvRow: row, existing: match });
+      continue;
+    }
+    const created = await createProduct(db, businessId, row);
+    byName.set(key, created);
+    createdCount++;
+  }
+
+  return { createdCount, conflicts };
+}
+
+export type ProductImportResolution = "merge" | "overwrite" | "keep";
+
+/**
+ * merge/overwrite/keep (spec 3.2), same semantics as suppliers: merge only fills fields that are
+ * genuinely empty on the existing row. category_id and min_stock are never "empty" (both
+ * required/defaulted), so merge leaves them alone — only sku and default_supplier_id (both
+ * nullable) can be filled in. price_history is append-only, not an in-place field, so both
+ * resolutions add a new snapshot when the file provides a purchase price, rather than asking
+ * what "empty" would even mean for a price.
+ */
+export async function applyProductImportResolution(
+  db: WritableDbOrTx,
+  businessId: number,
+  existingId: number,
+  resolution: ProductImportResolution,
+  csvRow: ProductCsvRow,
+): Promise<ProductMutationResult> {
+  const [existing] = await db
+    .select()
+    .from(productsTable)
+    .where(
+      and(
+        eq(productsTable.id, existingId),
+        eq(productsTable.businessId, businessId),
+      ),
+    );
+  if (!existing) return { ok: false, reason: "not_found" };
+
+  let updated = existing;
+  if (resolution === "overwrite") {
+    [updated] = await db
+      .update(productsTable)
+      .set({
+        sku: csvRow.sku,
+        categoryId: csvRow.categoryId,
+        defaultSupplierId: csvRow.defaultSupplierId,
+        minStock: csvRow.minStock,
+      })
+      .where(eq(productsTable.id, existingId))
+      .returning();
+  } else if (resolution === "merge") {
+    [updated] = await db
+      .update(productsTable)
+      .set({
+        sku: existing.sku ?? csvRow.sku,
+        defaultSupplierId:
+          existing.defaultSupplierId ?? csvRow.defaultSupplierId,
+      })
+      .where(eq(productsTable.id, existingId))
+      .returning();
+  }
+
+  if (resolution !== "keep" && csvRow.purchasePrice !== null) {
+    await maybeInsertPriceHistory(
+      db,
+      existingId,
+      csvRow.purchasePrice,
+      csvRow.salePrice,
+      csvRow.effectiveFrom,
+    );
+  }
+
+  return { ok: true, product: updated };
 }

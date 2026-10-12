@@ -86,7 +86,8 @@
     "needsReviewBadge": "Needs review",
     "needsReviewFilter": "Needs review only",
     "selectForBulkAction": "Select",
-    "confirmSelected": "Confirm reviewed ({count})"
+    "confirmSelected": "Confirm reviewed ({count})",
+    "importLink": "Import from CSV"
   },
   "products": {
     "title": "Products",
@@ -113,6 +114,32 @@
     "archiveCandidateBadge": "Archive candidate",
     "archiveCandidateFilter": "Archive candidates only",
     "selectForBulkAction": "Select",
-    "confirmSelected": "Confirm reviewed ({count})"
+    "confirmSelected": "Confirm reviewed ({count})",
+    "importLink": "Import from CSV"
+  },
+  "csvImport": {
+    "applyToAll": "Apply to all:",
+    "merge": "Merge",
+    "overwrite": "Overwrite",
+    "keep": "Keep existing",
+    "submitResolutions": "Apply resolutions",
+    "resolutionsApplied": "Done."
+  },
+  "suppliersImport": {
+    "title": "Import suppliers from CSV",
+    "upload": "Upload",
+    "invalidInput": "Choose a CSV file with at least a name column.",
+    "parseError": "Couldn't read that file as CSV.",
+    "createdCount": "Created {count} new supplier(s). Matches by name are listed below to resolve."
+  },
+  "productsImport": {
+    "title": "Import products from CSV",
+    "upload": "Upload",
+    "invalidInput": "Choose a CSV file with name and category columns.",
+    "parseError": "Couldn't read that file as CSV.",
+    "createdCount": "Created {count} new product(s). Matches by name are listed below to resolve.",
+    "rowErrorsTitle": "Some rows were skipped:",
+    "unknownCategory": "no category in the file matches an existing one",
+    "invalidPrice": "price isn't a valid amount (e.g. 105.50)"
   }
 }

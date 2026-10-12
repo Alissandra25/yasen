@@ -39,7 +39,7 @@ actually do, described tool-agnostically for any other agent reading this.
 Next.js (App Router) · TypeScript strict · PostgreSQL (Neon in dev) · Drizzle ORM + Drizzle Kit · Zod ·
 Tailwind + shadcn/ui · TanStack Query · next-intl · next-themes · culori · Recharts · React-pdf ·
 Resend · Sentry (@sentry/nextjs) · Vitest + Playwright · bcryptjs (password hashing) · dnd-kit
-(drag & drop reorder for categories).
+(drag & drop reorder for categories) · csv-parse (CSV import).
 Do not add a dependency that is not in this list without asking first.
 
 ## Commands

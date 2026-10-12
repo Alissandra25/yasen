@@ -86,7 +86,8 @@
     "needsReviewBadge": "Потребує перевірки",
     "needsReviewFilter": "Лише ті, що потребують перевірки",
     "selectForBulkAction": "Вибрати",
-    "confirmSelected": "Підтвердити перевірені ({count})"
+    "confirmSelected": "Підтвердити перевірені ({count})",
+    "importLink": "Імпорт з CSV"
   },
   "products": {
     "title": "Товари",
@@ -113,6 +114,32 @@
     "archiveCandidateBadge": "Кандидат на архівування",
     "archiveCandidateFilter": "Лише кандидати на архівування",
     "selectForBulkAction": "Вибрати",
-    "confirmSelected": "Підтвердити перевірені ({count})"
+    "confirmSelected": "Підтвердити перевірені ({count})",
+    "importLink": "Імпорт з CSV"
+  },
+  "csvImport": {
+    "applyToAll": "Застосувати до всіх:",
+    "merge": "Об'єднати",
+    "overwrite": "Перезаписати",
+    "keep": "Залишити існуюче",
+    "submitResolutions": "Застосувати рішення",
+    "resolutionsApplied": "Готово."
+  },
+  "suppliersImport": {
+    "title": "Імпорт постачальників з CSV",
+    "upload": "Завантажити",
+    "invalidInput": "Виберіть файл CSV, що містить принаймні колонку з назвою.",
+    "parseError": "Не вдалося прочитати цей файл як CSV.",
+    "createdCount": "Створено {count} нового постачальника(-ів). Збіги за назвою потрібно вирішити нижче."
+  },
+  "productsImport": {
+    "title": "Імпорт товарів з CSV",
+    "upload": "Завантажити",
+    "invalidInput": "Виберіть файл CSV з колонками назви та категорії.",
+    "parseError": "Не вдалося прочитати цей файл як CSV.",
+    "createdCount": "Створено {count} новий(их) товар(и). Збіги за назвою потрібно вирішити нижче.",
+    "rowErrorsTitle": "Деякі рядки пропущено:",
+    "unknownCategory": "жодна категорія у файлі не відповідає існуючій",
+    "invalidPrice": "ціна не є правильною сумою (напр. 105.50)"
   }
 }

@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  applyProductImportResolution,
   archiveProduct,
   confirmProductsReviewed,
   createProduct,
+  importProductsFromRows,
   isArchiveCandidate,
   updateProduct,
 } from "./products";
@@ -33,6 +35,7 @@ function createFakeDb(options: {
     >[0],
     insert,
     insertValues,
+    update,
     updateSet,
   };
 }
@@ -173,5 +176,124 @@ describe("confirmProductsReviewed", () => {
     await confirmProductsReviewed(db, 7, []);
 
     expect(updateSet).not.toHaveBeenCalled();
+  });
+});
+
+const csvRow = {
+  name: "New Product",
+  sku: null,
+  categoryId: 1,
+  defaultSupplierId: null,
+  minStock: 0,
+  purchasePrice: null,
+  salePrice: null,
+  effectiveFrom: null,
+};
+
+describe("importProductsFromRows", () => {
+  it("creates a row with no existing match (no locations yet, so no inventory seeding)", async () => {
+    const created = { id: 2, name: "New Product" };
+    const { db, insertValues } = createFakeDb({
+      selectRows: [], // no existing products, and no locations for createProduct's own lookup
+      mutateReturning: [created],
+    });
+
+    const result = await importProductsFromRows(db, 7, [csvRow]);
+
+    expect(insertValues).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "New Product" }),
+    );
+    expect(result).toEqual({ createdCount: 1, conflicts: [] });
+  });
+
+  it("flags a name match against an existing product as a conflict, without creating anything", async () => {
+    const existing = { id: 1, name: "new   product" };
+    const { db, insert } = createFakeDb({ selectRows: [existing] });
+
+    const result = await importProductsFromRows(db, 7, [csvRow]);
+
+    expect(insert).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      createdCount: 0,
+      conflicts: [{ csvRow, existing }],
+    });
+  });
+});
+
+describe("applyProductImportResolution", () => {
+  it("returns not_found when no row matches", async () => {
+    const { db } = createFakeDb({ selectRows: [] });
+
+    const result = await applyProductImportResolution(
+      db,
+      7,
+      99,
+      "keep",
+      csvRow,
+    );
+
+    expect(result).toEqual({ ok: false, reason: "not_found" });
+  });
+
+  it("keep leaves the existing row untouched and adds no price_history", async () => {
+    const existing = { id: 1, sku: null, defaultSupplierId: null };
+    const { db, update, insert } = createFakeDb({ selectRows: [existing] });
+
+    const result = await applyProductImportResolution(db, 7, 1, "keep", {
+      ...csvRow,
+      purchasePrice: 1000,
+      salePrice: null,
+      effectiveFrom: "2026-10-12",
+    });
+
+    expect(update).not.toHaveBeenCalled();
+    expect(insert).not.toHaveBeenCalled();
+    expect(result).toEqual({ ok: true, product: existing });
+  });
+
+  it("merge only fills sku/default_supplier_id when currently empty", async () => {
+    const existing = { id: 1, sku: null, defaultSupplierId: 5 };
+    const updated = { id: 1, sku: "SKU-1", defaultSupplierId: 5 };
+    const { db, updateSet } = createFakeDb({
+      selectRows: [existing],
+      mutateReturning: [updated],
+    });
+
+    const result = await applyProductImportResolution(db, 7, 1, "merge", {
+      ...csvRow,
+      sku: "SKU-1",
+      defaultSupplierId: 9, // ignored: existing already has one
+    });
+
+    expect(updateSet).toHaveBeenCalledWith({
+      sku: "SKU-1",
+      defaultSupplierId: 5,
+    });
+    expect(result).toEqual({ ok: true, product: updated });
+  });
+
+  it("overwrite replaces category/supplier/min_stock/sku with the file's values", async () => {
+    const existing = { id: 1, sku: "OLD", defaultSupplierId: 5 };
+    const updated = { id: 1, sku: "NEW", defaultSupplierId: 9 };
+    const { db, updateSet } = createFakeDb({
+      selectRows: [existing],
+      mutateReturning: [updated],
+    });
+
+    const result = await applyProductImportResolution(db, 7, 1, "overwrite", {
+      ...csvRow,
+      sku: "NEW",
+      categoryId: 3,
+      defaultSupplierId: 9,
+      minStock: 10,
+    });
+
+    expect(updateSet).toHaveBeenCalledWith({
+      sku: "NEW",
+      categoryId: 3,
+      defaultSupplierId: 9,
+      minStock: 10,
+    });
+    expect(result).toEqual({ ok: true, product: updated });
   });
 });

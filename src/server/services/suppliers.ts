@@ -2,6 +2,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { suppliersTable } from "@/db/schema/suppliers";
+import { normalizeName } from "@/lib/strings";
 
 type WritableDbOrTx = Pick<
   ReturnType<typeof getDb>,
@@ -27,11 +28,6 @@ export const supplierInputSchema = z.object({
 });
 
 export type SupplierInput = z.infer<typeof supplierInputSchema>;
-
-/** Case/whitespace-insensitive match, reused by CSV import's duplicate detection (spec 3.2). */
-export function normalizeSupplierName(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, " ");
-}
 
 // No db/tx parameter, unlike the writes below: a standalone read called directly from a page.
 export async function listSuppliers(businessId: number) {
@@ -76,13 +72,13 @@ export async function createSupplierOnTheFly(
   businessId: number,
   name: string,
 ): Promise<CreateSupplierOnTheFlyResult> {
-  const normalized = normalizeSupplierName(name);
+  const normalized = normalizeName(name);
   const existing = await db
     .select()
     .from(suppliersTable)
     .where(eq(suppliersTable.businessId, businessId));
   const match = existing.find(
-    (supplier) => normalizeSupplierName(supplier.name) === normalized,
+    (supplier) => normalizeName(supplier.name) === normalized,
   );
   if (match) {
     return { supplier: match, created: false };
@@ -161,4 +157,106 @@ export async function confirmSuppliersReviewed(
         inArray(suppliersTable.id, supplierIds),
       ),
     );
+}
+
+export interface SupplierCsvRow {
+  name: string;
+  contacts: string | null;
+  note: string | null;
+}
+
+export interface SupplierImportConflict {
+  csvRow: SupplierCsvRow;
+  existing: Supplier;
+}
+
+export interface SupplierImportResult {
+  createdCount: number;
+  conflicts: SupplierImportConflict[];
+}
+
+/**
+ * New rows are created immediately; a name match against an existing supplier (or an earlier row
+ * in this same file) becomes a conflict for the owner to resolve instead — never overwritten
+ * without a decision (spec 3.2).
+ */
+export async function importSuppliersFromRows(
+  db: WritableDbOrTx,
+  businessId: number,
+  rows: SupplierCsvRow[],
+): Promise<SupplierImportResult> {
+  const existingRows = await db
+    .select()
+    .from(suppliersTable)
+    .where(eq(suppliersTable.businessId, businessId));
+  const byName = new Map(
+    existingRows.map((row) => [normalizeName(row.name), row]),
+  );
+
+  let createdCount = 0;
+  const conflicts: SupplierImportConflict[] = [];
+
+  for (const row of rows) {
+    const key = normalizeName(row.name);
+    const match = byName.get(key);
+    if (match) {
+      conflicts.push({ csvRow: row, existing: match });
+      continue;
+    }
+    const [created] = await db
+      .insert(suppliersTable)
+      .values({
+        businessId,
+        name: row.name,
+        contacts: row.contacts,
+        note: row.note,
+        needsReview: false,
+      })
+      .returning();
+    byName.set(key, created);
+    createdCount++;
+  }
+
+  return { createdCount, conflicts };
+}
+
+export type SupplierImportResolution = "merge" | "overwrite" | "keep";
+
+/** merge fills only fields that are currently empty on the existing row; overwrite replaces; keep leaves it as is (spec 3.2). */
+export async function applySupplierImportResolution(
+  db: WritableDbOrTx,
+  businessId: number,
+  existingId: number,
+  resolution: SupplierImportResolution,
+  csvRow: SupplierCsvRow,
+): Promise<SupplierMutationResult> {
+  const [existing] = await db
+    .select()
+    .from(suppliersTable)
+    .where(
+      and(
+        eq(suppliersTable.id, existingId),
+        eq(suppliersTable.businessId, businessId),
+      ),
+    );
+  if (!existing) return { ok: false, reason: "not_found" };
+
+  if (resolution === "keep") {
+    return { ok: true, supplier: existing };
+  }
+
+  const nextValues =
+    resolution === "overwrite"
+      ? { contacts: csvRow.contacts, note: csvRow.note }
+      : {
+          contacts: existing.contacts ?? csvRow.contacts,
+          note: existing.note ?? csvRow.note,
+        };
+
+  const [updated] = await db
+    .update(suppliersTable)
+    .set(nextValues)
+    .where(eq(suppliersTable.id, existingId))
+    .returning();
+  return { ok: true, supplier: updated };
 }
