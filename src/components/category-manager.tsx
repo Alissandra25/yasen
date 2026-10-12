@@ -84,6 +84,18 @@ export function CategoryManager({
   initialCategories: CategoryNode[];
 }) {
   const [categories, setCategories] = useState(initialCategories);
+  const [syncedInitial, setSyncedInitial] = useState(initialCategories);
+
+  // useState's initial value is only used on mount; after a create/rename/archive action calls
+  // revalidatePath, the server re-renders this page and pushes a fresh initialCategories prop
+  // into this already-mounted component. Adjusting state during render (React's documented
+  // alternative to useEffect+setState for "reset state when a prop changes") picks that up
+  // without an extra render-after-commit cycle. Without this, the list would only reflect a
+  // create/rename/archive after a full page reload.
+  if (initialCategories !== syncedInitial) {
+    setSyncedInitial(initialCategories);
+    setCategories(initialCategories);
+  }
 
   function reorderSubcategories(
     parentId: number,
