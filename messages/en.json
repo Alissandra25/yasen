@@ -28,7 +28,8 @@
     "productsLink": "Products",
     "receiptsLink": "Goods receipts",
     "salesLink": "Sales",
-    "stockLink": "Stock"
+    "stockLink": "Stock",
+    "transfersLink": "Transfers"
   },
   "login": {
     "title": "Log in",
@@ -119,6 +120,27 @@
     "selectForBulkAction": "Select",
     "confirmSelected": "Confirm reviewed ({count})",
     "importLink": "Import from CSV"
+  },
+  "transfers": {
+    "title": "Transfers",
+    "empty": "No transfers yet.",
+    "dateColumn": "Date",
+    "fromColumn": "From",
+    "toColumn": "To",
+    "linesColumn": "Lines",
+    "quantityColumn": "Total quantity",
+    "newTransferTitle": "New transfer",
+    "fromLabel": "From",
+    "toLabel": "To",
+    "categoryLabel": "Category",
+    "allCategories": "All categories",
+    "availableLabel": "Available",
+    "noAvailableProducts": "No products with stock at this location.",
+    "sameLocationError": "Choose two different locations.",
+    "post": "Post transfer",
+    "posted": "Transfer posted.",
+    "invalidInput": "Select at least one product and enter a quantity.",
+    "insufficientStockError": "Only {available} of \"{product}\" available at the source location."
   },
   "stock": {
     "title": "Stock",

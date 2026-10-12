@@ -28,7 +28,8 @@
     "productsLink": "Товари",
     "receiptsLink": "Прийняття товару",
     "salesLink": "Продажі",
-    "stockLink": "Залишки"
+    "stockLink": "Залишки",
+    "transfersLink": "Переміщення"
   },
   "login": {
     "title": "Вхід",
@@ -119,6 +120,27 @@
     "selectForBulkAction": "Вибрати",
     "confirmSelected": "Підтвердити перевірені ({count})",
     "importLink": "Імпорт з CSV"
+  },
+  "transfers": {
+    "title": "Переміщення",
+    "empty": "Поки немає жодного переміщення.",
+    "dateColumn": "Дата",
+    "fromColumn": "Звідки",
+    "toColumn": "Куди",
+    "linesColumn": "Рядки",
+    "quantityColumn": "Загальна кількість",
+    "newTransferTitle": "Нове переміщення",
+    "fromLabel": "Звідки",
+    "toLabel": "Куди",
+    "categoryLabel": "Категорія",
+    "allCategories": "Усі категорії",
+    "availableLabel": "Доступно",
+    "noAvailableProducts": "Немає товарів у наявності в цьому місці.",
+    "sameLocationError": "Виберіть два різні місця.",
+    "post": "Провести переміщення",
+    "posted": "Переміщення проведено.",
+    "invalidInput": "Виберіть хоча б один товар і вкажіть кількість.",
+    "insufficientStockError": "Доступно лише {available} од. товару «{product}» у місці-джерелі."
   },
   "stock": {
     "title": "Залишки",

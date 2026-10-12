@@ -28,7 +28,8 @@
     "productsLink": "Товары",
     "receiptsLink": "Приёмка товара",
     "salesLink": "Продажи",
-    "stockLink": "Остатки"
+    "stockLink": "Остатки",
+    "transfersLink": "Перемещения"
   },
   "login": {
     "title": "Вход",
@@ -119,6 +120,27 @@
     "selectForBulkAction": "Выбрать",
     "confirmSelected": "Подтвердить проверенные ({count})",
     "importLink": "Импорт из CSV"
+  },
+  "transfers": {
+    "title": "Перемещения",
+    "empty": "Пока нет ни одного перемещения.",
+    "dateColumn": "Дата",
+    "fromColumn": "Откуда",
+    "toColumn": "Куда",
+    "linesColumn": "Строки",
+    "quantityColumn": "Общее количество",
+    "newTransferTitle": "Новое перемещение",
+    "fromLabel": "Откуда",
+    "toLabel": "Куда",
+    "categoryLabel": "Категория",
+    "allCategories": "Все категории",
+    "availableLabel": "Доступно",
+    "noAvailableProducts": "Нет товаров в наличии в этом месте.",
+    "sameLocationError": "Выберите два разных места.",
+    "post": "Провести перемещение",
+    "posted": "Перемещение проведено.",
+    "invalidInput": "Выберите хотя бы один товар и укажите количество.",
+    "insufficientStockError": "Доступно только {available} ед. товара «{product}» в месте-источнике."
   },
   "stock": {
     "title": "Остатки",
