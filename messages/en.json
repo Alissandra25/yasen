@@ -119,6 +119,18 @@
     "confirmSelected": "Confirm reviewed ({count})",
     "importLink": "Import from CSV"
   },
+  "cashSummary": {
+    "title": "Daily cash summary",
+    "cash": "Cash",
+    "card": "Card",
+    "grossTotal": "Gross total",
+    "netTotal": "Net total",
+    "discountLabel": "Discount given today",
+    "noteLabel": "Note",
+    "save": "Save",
+    "saved": "Saved.",
+    "invalidInput": "Enter a valid discount amount, e.g. 105.50."
+  },
   "sales": {
     "title": "Sales matrix",
     "prevMonth": "← Previous month",

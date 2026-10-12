@@ -1,7 +1,14 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CashSummaryPanel } from "@/components/cash-summary-panel";
 import { SalesMatrix } from "@/components/sales-matrix";
-import { businessCurrentMonth, daysInMonth, monthStartDate } from "@/lib/dates";
+import {
+  businessCurrentMonth,
+  businessToday,
+  daysInMonth,
+  monthStartDate,
+} from "@/lib/dates";
+import { getDailyCashSummary } from "@/server/services/cash-adjustments";
 import { listCategories } from "@/server/services/categories";
 import { listLocations } from "@/server/services/locations";
 import { listProducts } from "@/server/services/products";
@@ -37,18 +44,21 @@ function buildCategoryOrder(
 export default async function SalesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; locationId?: string }>;
+  searchParams: Promise<{ month?: string; locationId?: string; day?: string }>;
 }) {
   const user = await requireOwner();
   const t = await getTranslations("sales");
+  const locale = await getLocale();
   const business = await getCurrentBusiness();
   const timezone = business?.timezone ?? "Europe/Kyiv";
+  const currency = business?.currency ?? "UAH";
 
   const params = await searchParams;
   const month = params.month ?? businessCurrentMonth(timezone);
   const days = daysInMonth(month);
   const periodStart = monthStartDate(month);
   const periodEnd = days[days.length - 1];
+  const day = params.day ?? businessToday(timezone);
 
   const locations = await listLocations(user.businessId);
   const shopLocations = locations.filter(
@@ -58,13 +68,14 @@ export default async function SalesPage({
     ? Number(params.locationId)
     : (shopLocations[0]?.id ?? locations[0]?.id ?? 0);
 
-  const [products, categories, totals, stockAtStart, stockNow] =
+  const [products, categories, totals, stockAtStart, stockNow, cashSummary] =
     await Promise.all([
       listProducts(user.businessId),
       listCategories(user.businessId),
       getSalesTotals(user.businessId, locationId, periodStart, periodEnd),
       getStockAtPeriodStart(user.businessId, locationId, periodStart),
       getCurrentStock(user.businessId, locationId),
+      getDailyCashSummary(user.businessId, locationId, day),
     ]);
 
   const activeProducts = products.filter((product) => !product.archived);
@@ -76,7 +87,7 @@ export default async function SalesPage({
         <CardHeader>
           <CardTitle>{t("title")}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-6">
           <SalesMatrix
             month={month}
             days={days}
@@ -91,6 +102,14 @@ export default async function SalesPage({
             totals={totals}
             stockAtStart={Array.from(stockAtStart.entries())}
             stockNow={Array.from(stockNow.entries())}
+          />
+          <CashSummaryPanel
+            day={day}
+            locationId={locationId}
+            month={month}
+            summary={cashSummary}
+            currency={currency}
+            locale={locale}
           />
         </CardContent>
       </Card>
