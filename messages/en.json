@@ -20,7 +20,12 @@
   "nav": {
     "home": "Yasen",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "catalog": "Catalog",
+    "locationsLink": "Locations",
+    "categoriesLink": "Categories",
+    "suppliersLink": "Suppliers",
+    "productsLink": "Products"
   },
   "login": {
     "title": "Log in",
@@ -37,12 +42,7 @@
     "submit": "Save",
     "success": "Password changed.",
     "invalidInput": "The new password must be at least 8 characters.",
-    "wrongPassword": "Current password is incorrect.",
-    "referenceDataTitle": "Reference data",
-    "locationsLink": "Locations",
-    "categoriesLink": "Categories",
-    "suppliersLink": "Suppliers",
-    "productsLink": "Products"
+    "wrongPassword": "Current password is incorrect."
   },
   "locations": {
     "title": "Locations",

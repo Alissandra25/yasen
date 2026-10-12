@@ -20,7 +20,12 @@
   "nav": {
     "home": "Ясен",
     "settings": "Налаштування",
-    "logout": "Вийти"
+    "logout": "Вийти",
+    "catalog": "Каталог",
+    "locationsLink": "Місця зберігання",
+    "categoriesLink": "Категорії",
+    "suppliersLink": "Постачальники",
+    "productsLink": "Товари"
   },
   "login": {
     "title": "Вхід",
@@ -37,12 +42,7 @@
     "submit": "Зберегти",
     "success": "Пароль змінено.",
     "invalidInput": "Новий пароль має містити щонайменше 8 символів.",
-    "wrongPassword": "Поточний пароль неправильний.",
-    "referenceDataTitle": "Довідкові дані",
-    "locationsLink": "Місця зберігання",
-    "categoriesLink": "Категорії",
-    "suppliersLink": "Постачальники",
-    "productsLink": "Товари"
+    "wrongPassword": "Поточний пароль неправильний."
   },
   "locations": {
     "title": "Місця зберігання",

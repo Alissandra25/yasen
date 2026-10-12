@@ -13,7 +13,7 @@ import {
 } from "@/server/services/suppliers";
 import { requireOwner } from "@/server/session";
 
-const SUPPLIERS_PAGE = "/[locale]/(app)/settings/suppliers";
+const SUPPLIERS_PAGE = "/[locale]/(app)/suppliers";
 
 export interface SupplierFormState {
   error?: "invalid_input" | "not_found";

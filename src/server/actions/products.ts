@@ -16,7 +16,7 @@ import {
 import { getCurrentBusiness } from "@/server/services/business";
 import { requireOwner } from "@/server/session";
 
-const PRODUCTS_PAGE = "/[locale]/(app)/settings/products";
+const PRODUCTS_PAGE = "/[locale]/(app)/products";
 
 export interface ProductFormState {
   error?: "invalid_input" | "not_found";

@@ -41,7 +41,7 @@ export async function createLocationAction(
     });
   });
 
-  revalidatePath("/[locale]/(app)/settings/locations", "page");
+  revalidatePath("/[locale]/(app)/locations", "page");
   return {};
 }
 
@@ -85,6 +85,6 @@ export async function updateLocationAction(
     return { error: result.reason };
   }
 
-  revalidatePath("/[locale]/(app)/settings/locations", "page");
+  revalidatePath("/[locale]/(app)/locations", "page");
   return {};
 }

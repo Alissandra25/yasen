@@ -20,7 +20,12 @@
   "nav": {
     "home": "Ясен",
     "settings": "Настройки",
-    "logout": "Выйти"
+    "logout": "Выйти",
+    "catalog": "Каталог",
+    "locationsLink": "Места хранения",
+    "categoriesLink": "Категории",
+    "suppliersLink": "Поставщики",
+    "productsLink": "Товары"
   },
   "login": {
     "title": "Вход",
@@ -37,12 +42,7 @@
     "submit": "Сохранить",
     "success": "Пароль изменён.",
     "invalidInput": "Новый пароль должен содержать не менее 8 символов.",
-    "wrongPassword": "Текущий пароль неверен.",
-    "referenceDataTitle": "Справочные данные",
-    "locationsLink": "Места хранения",
-    "categoriesLink": "Категории",
-    "suppliersLink": "Поставщики",
-    "productsLink": "Товары"
+    "wrongPassword": "Текущий пароль неверен."
   },
   "locations": {
     "title": "Места хранения",

@@ -14,7 +14,7 @@ import {
 } from "@/server/services/categories";
 import { requireOwner } from "@/server/session";
 
-const CATEGORIES_PAGE = "/[locale]/(app)/settings/categories";
+const CATEGORIES_PAGE = "/[locale]/(app)/categories";
 
 export interface CategoryFormState {
   error?: "invalid_input" | "not_found";
