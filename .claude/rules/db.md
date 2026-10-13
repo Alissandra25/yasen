@@ -16,3 +16,6 @@ paths:
 - `sales.client_uuid`: unique, nullable. Inserts use `onConflictDoNothing` on it.
 - The data model in `docs/spec/technical.md` (section 11) is the target. Add tables with the stage that needs them, not all at once.
 - Never edit an applied migration. Never run `drizzle-kit push` against a shared database.
+- Quantities are integer thousandths of the product's unit (`2.5 m` → `2500`, `3 pcs` → `3000`). Parse, compute, round and format them only through `src/lib/quantity.ts` (like money). Whole units (pcs, pack) must be multiples of 1000. Never use floats for quantities.
+- `products.unit` is locked once the product has a posted movement; changing it later goes through the "convert to another unit" flow (new product + two `unit_change` adjustments + archive), never by editing the column.
+- Every posted document (purchase, transfer, stocktake post, return) carries a client-generated `client_uuid` (unique). A repeated post with the same id returns the existing document instead of creating a new one.

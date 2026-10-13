@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,14 @@ export function SupplierRow({
     boundAction,
     initialState,
   );
+
+  const wasPendingRef = useRef(false);
+  useEffect(() => {
+    if (wasPendingRef.current && !isPending && !state.error) {
+      setEditing(false);
+    }
+    wasPendingRef.current = isPending;
+  }, [isPending, state]);
 
   if (!editing) {
     return (

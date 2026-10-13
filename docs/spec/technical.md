@@ -15,7 +15,6 @@ A web application for a small business (retail shop) to track products, record s
 
 - **Owner** — full access: products, warehouse, sales, analytics, user management. Only this role is active at launch.
 - **Seller** — limited access: records sales, sees stock levels. Cannot see analytics or profitability.
-
 The role model is built into the architecture from day one (RBAC), even though only the owner is used initially.
 
 ## 3. Core Functionality
@@ -87,6 +86,33 @@ At launch, sales are entered **by the owner after the fact** — e.g. in the eve
 - Model consequence: with the split on, sales store quantity separately per payment method (payment_method per record); with it off, payment_method may be empty or a single default.
 - **"Creates / updates" resolved as append-only deltas, not in-place edits:** editing a cell never updates an existing sales row — it inserts one new row holding the SIGNED DIFFERENCE between the new value and the cell's current total (which can be negative, correcting a previous entry down). The displayed cell value is always the sum of every row for that (product, day[, payment method]). This is what makes "creates / updates" (3.5) consistent with "no conflicts — append only" (3.6): the append-only rule isn't only about the offline queue, it's how every matrix edit is written, online or not — so Stage 2's offline sync is really the same code path, not a special case. A sale needs a known sale price (price_history effective on that day with a non-null sale_price); if none exists yet, the save is rejected with a clear message instead of recording a priceless sale.
 - **"Stock at the start of the period" is reconstructed, not stored:** start = current stock − receipts since the period start + sales since the period start (both already queried for the matrix itself). No daily snapshots are kept, consistent with the same simplification restock rules rely on (3.7).
+
+### 3.5.1 Sales Screen UI (agreed via mockups)
+
+- **One screen, three views:** a Day / Week / Month switcher in the header. Same data, different layout; the user picks whichever is convenient, and the last choice is remembered per user.
+- **Cells:** each day cell holds two fields side by side — cash and card (labelled Г / К in the column header; the card field is tinted brand-light). With the split off — one field. Zero shows as a muted '·'; today's column is highlighted, weekends are tinted, future days are locked.
+- **Autosave:** every change is saved immediately (debounced); no Save button; a 'Saved at 19:42' status in the toolbar. Fits the append-only matrix and the offline queue.
+- **Hierarchy in the table:** category row → subcategory row (indented, lighter) → products. Each level collapses; rows show item counts. A collapsed category shows a 'has sales' marker if it contains entries for the period.
+- **Category picker:** not chips (50 categories don't fit) — a 'Category: All' button opening a tree with search and checkboxes, subcategories nested inside.
+- **Show filter:** 'All products' (default, for entry) / 'Only with sales in the period' (to review what was entered) / 'Only with notes'. Deliberately no 'sold in the last N days' filter — it would hide rarely sold items that were sold today.
+- **Search is the main way to find a product:** by product name or SKU and by category / subcategory name.
+  - The '/' key focuses the search (except while the user is typing in an input).
+  - Filtering is client-side over the synced catalogue (it also works offline); matching is case-insensitive and ignores extra spaces.
+  - Matched products are shown together with their category and subcategory header rows; the matching text is highlighted.
+  - A category or subcategory match shows that whole group expanded. Group matches and product matches are shown together, in the configured category order.
+  - A summary line above the table, e.g. 'Found: 1 subcategory, 14 products'.
+  - Enter moves focus to the first match's cell (Day: the cash field; Week / Month: today's cell), or to the first product of a matched group.
+  - Esc clears the search and restores the previous scroll position.
+- **Cash box:** a compact button at the top right with the selected day's total; it opens a popover with cash, card, the day's discount + note, and the total after discounts. In Week / Month, clicking a date in the column header selects that day for the cash box. No cash panel at the bottom of the page.
+- **No unit totals on this screen** (pieces sold per day / month) — that belongs to analytics.
+- **App shell:** a left sidebar with the logo, location switcher, grouped navigation (Daily: Sales, Goods receipt, Transfers; Stock: Stock levels, Catalogue), settings and the user at the bottom; a badge on Stock levels with the number of negative items. Stacks on narrow screens.
+- **Horizontal scroll is preserved:** changing the category, the Show filter or the search, and collapsing / expanding groups, keeps the horizontal scroll position of the day columns. When the period changes (another week / month), the table scrolls to today if it is inside the period, otherwise to the start of the period.
+- **Virtualization:** with \~2000 products the table body is virtualized with `@tanstack/react-virtual` — the visible tree (category, subcategory and product rows after collapsing, filters and search) is flattened into one list of rows, and only rows in the viewport are rendered. Each row type has a fixed height, so no measuring is needed. The header row and the product column stay sticky.
+- **Product notes in the table:** the paper notebooks have notes next to products in different ink colours; the app replaces them with typed notes (data model: product_notes, note_types).
+  - Next to the product name — small coloured dots, one per note type that has an active note for the period shown.
+  - Hover, keyboard focus or a long press on mobile opens a popover listing the notes: type label with its colour, text, a 'carries over' badge when set, an edit action and '+ note'.
+  - Colour is never the only signal: the type name is always shown in the popover, and the dot has an accessible label.
+  - A note can be added from the same popover on a product that has none (via the row's context action).
 
 ### 3.6 Offline Mode (Sales Matrix Only)
 
@@ -166,13 +192,11 @@ A business may not want to track suppliers at all. A business setting (suppliers
 - Stock can become **negative**.
 - Negative items are **highlighted** separately in the stock list as a signal to reconcile — the discrepancy is a business accounting issue, not a reason to block the sale.
 - The owner sees problem items and makes a manual adjustment.
-
 **Stock adjustments:**
 
 - Adjusting stock is a **permission tied to a role**, not hard-wired to the owner. At launch the owner has it; later it can be granted to another role without rewriting logic.
 - When adjusting, the user specifies a **reason** (e.g. breakage, shortage, mis-sort, etc.).
 - Every adjustment is recorded in the **audit log**: who, when, from old value to new, with the reason — so it can be verified.
-
 **Full stocktake (separate mode):**
 Unlike a one-off adjustment of a single item, this is a bulk count of the whole warehouse in one go (typically once a month).
 
@@ -200,19 +224,16 @@ What happens to the product depends on the reason. **Return type** determines th
 **Type 1 — resellable (didn't fit):** wrong size, changed mind, etc.
 
 - The product goes back into stock (warehouse or shop) and is available for sale again.
-
 **Type 2 — defective:** does not go back on sale. Split into two subcategories:
 
 - **2a — for supplier replacement:** goes into a separate "for replacement" list; the supplier is expected to compensate.
 - **2b — write-off as a loss:** a pure business loss, no compensation.
-
 **Common to all types:**
 
 - The sale is reversed: revenue and profit for the item are reduced.
 - **Customer refund and cash reconciliation:** recording a return automatically reduces the day's revenue by the refund amount. Only the **refund method** matters (cash from the till / transfer to a card), which the owner specifies manually — reconciliation is reduced in that column. The original payment method is unknown (the matrix has no individual receipts) and is not taken into account. The date is the day the return is recorded, because that is when the cash leaves the till.
 - The return is recorded in the audit log with its type and reason.
 - Defective items (2a/2b) are tracked in a separate model, not mixed with resellable stock.
-
 **Closing the replacement loop (type 2a — supplier replacement):**
 An item in the "for replacement" list has a status: **awaiting replacement → resolved**. When the supplier responds, the owner closes the item with one of three types:
 
@@ -269,7 +290,7 @@ Posted documents (goods receipts, transfers, etc.) can be corrected after postin
 - **Authorisation:** sessions with role-based access (owner / seller) — details in 9.
 - **Charts:** a charting library (e.g. Recharts).
 - **Money — integer minor units (cross-cutting rule):** all monetary values (prices, totals, compensation) are stored as an integer number of kopecks/cents, never as floating point, to avoid rounding errors. Integer minor units were chosen (rather than numeric) because calculations live in JS, which has no exact decimal type: integers stay exact both in the database and in code. Conversion to decimals and the currency symbol happen only at the display layer.
-  - _Note:_ profitability and shares produce fractional results (half-kopecks) — the rounding rule is defined below.
+  - *Note:* profitability and shares produce fractional results (half-kopecks) — the rounding rule is defined below.
 - **Money rounding and parsing (cross-cutting rule):**
   - Fractions are allowed only inside a calculation and are rounded once, at the end, half away from zero (0.5 kopeck → 1).
   - VAT is calculated per document line; the document total is the sum of the rounded lines, so parts always sum to the whole.
@@ -291,6 +312,7 @@ Posted documents (goods receipts, transfers, etc.) can be corrected after postin
 - **Validation — Zod.** De facto standard: one schema validates both form data and API input; fits TypeScript well.
 - **Styling and components — Tailwind + shadcn/ui.** Clean look without building every component from scratch; the most popular pair in the Next ecosystem.
 - **Drag & drop — dnd-kit.** For reordering categories and subcategories in settings; lightweight, supports sortable lists, keyboard and touch.
+- **Virtualized lists — @tanstack/react-virtual.** Renders only the visible rows of the sales matrix (\~2000 products); headless, fits the TanStack Query stack (see 3.5.1).
 - **Themes — next-themes.** The standard choice for shadcn/ui: light / dark / system, no flash on load (see 13).
 - **Colour handling — culori.** Generating a shade scale from a brand colour (in OKLCH) and checking contrast (see 13).
 - **Error monitoring — Sentry (@sentry/nextjs).** Client and server errors with source maps (see 12.7).
@@ -320,10 +342,11 @@ A mandatory part of development, three levels with different requirements.
 ## 11. Data Model (Draft)
 
 > **Cross-cutting rule — timestamps:** every table has created_at and updated_at, even where the list below doesn't mention them. PostgreSQL doesn't add them on its own, so they are declared via a shared helper in the Drizzle schema that every table includes. created_at — DEFAULT now() (the database sets it on insert). updated_at — maintained via Drizzle's $onUpdate; this only fires for changes made through Drizzle, so direct SQL changes (data migrations, manual fixes) must set it explicitly. If a database-level guarantee is ever needed — a PostgreSQL trigger.
-
 - **businesses** — id, name, description (nullable — short tagline, shown wherever the business name appears, e.g. the app header), vat_enabled, vat_rate, archive_period_products (default 1 month), archive_period_suppliers (default 3 months), timezone (IANA, default Europe/Kyiv), currency (ISO 4217, default UAH), suppliers_enabled (default true), period_lock_grace_days (default 5), primary_color (hex, nullable — main brand colour), accent_color (hex, nullable — accent), logo (bytea, nullable), logo_mime_type (nullable), created_at — business settings (archive-candidate periods here; restock rule defaults in restock_rules).
 - **locations** — id, business_id, name, type (shop/warehouse).
 - **categories** — id, business_id, name, parent_id (nullable — empty for a category, set for a subcategory), sort_order (display order within the parent; changed via drag & drop in settings; named sort_order rather than order because ORDER is a reserved SQL word), archived.
+- **note_types** — id, business_id, name, color, sort_order. Per-business reference list of note types (they mirror the ink colours of the paper notebooks); configured in settings.
+- **product_notes** — id, business_id, product_id, note_type_id, text, valid_from (month), valid_to (nullable month; empty = carries over to following months), created_by, created_at, updated_at. The 'carry over to next month' toggle maps to valid_to: on → valid_to is empty; off → valid_to = the note's month. A note is active for a month when valid_from ≤ month and (valid_to is empty or valid_to ≥ month). Notes are never copied month to month — carrying over is just an open range. Changes are written to the audit log.
 - **users** — id, business_id, email, password_hash (bcrypt), role (owner/seller), theme (light/dark/system, default system), created_at. Sessions are server-side, key in an httpOnly secure cookie. Password reset tokens are single-use, short-lived (see 9).
 - **products** — id, business_id, name, sku, category_id (reference to categories — the product's most specific category: the subcategory if there is one, otherwise the category), min_stock, default_supplier_id (nullable — main supplier; defaults to the supplier of the latest receipt, editable), velocity_threshold_pct (nullable — per-product override of the activity threshold; empty → business default applies), needs_review (flag "created quickly from a receipt, worth reviewing"), archived.
 - **price_history** — id, product_id, purchase_price, sale_price, effective_from (price start date).
@@ -379,9 +402,9 @@ A mandatory part of development, three levels with different requirements.
 ### 12.5 Hosting
 
 - **Development stage — Vercel.** Native to Next.js, deployment straight from GitHub, free Hobby plan (100 GB traffic, 1M function invocations — plenty of headroom). Convenient while functionality is being built. Downside for this project's goals: it hides the entire deployment layer, so there's nothing to show in terms of infrastructure skills — hence the move at the next stage.
-  - _Limit to remember:_ a Vercel function must complete within 60 s (Hobby) / 300 s (Pro) — important for generating large PDFs / heavy reports.
+  - *Limit to remember:* a Vercel function must complete within 60 s (Hobby) / 300 s (Pro) — important for generating large PDFs / heavy reports.
 - **Maturity stage — Railway ($5/month, Hobby plan).** Accepts a Docker image, PostgreSQL is added in one click in the same project (connection string automatically in env vars), **no sleeping** — the app is always live. Chosen deliberately: free container tiers have effectively disappeared in 2026 (Railway and [Fly.io](http://Fly.io) dropped their free tiers; Render free sleeps after 15 min idle and takes 30–60 s to wake — unacceptable since the friend actually uses the app). For $5 — a live service for her + real Docker and a self-managed database for the portfolio.
-  - _Alternatives considered:_ [Fly.io](http://Fly.io) (pay-as-you-go, \~$5, the most "Docker-centric", but more manual work with fly.toml); Render paid instance (\~$7, no sleeping). Railway chosen for its balance of convenience and control.
+  - *Alternatives considered:* [Fly.io](http://Fly.io) (pay-as-you-go, \~$5, the most "Docker-centric", but more manual work with fly.toml); Render paid instance (\~$7, no sleeping). Railway chosen for its balance of convenience and control.
 - **Database — PostgreSQL on Railway** (at the maturity stage, together with the app). During development on Vercel the database can live on Neon (free PostgreSQL, no card required) — at the move, data is carried over via Drizzle migrations.
 - **Migration:** standard Next.js is not locked to any platform — the Docker image moves between Railway, Render, [Fly.io](http://Fly.io) or a VPS without rewriting (the door stays open).
 

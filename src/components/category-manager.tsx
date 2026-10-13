@@ -64,6 +64,7 @@ function SortableList<T extends { id: number }>({
 
   return (
     <DndContext
+      id={`categories-${parentId ?? "root"}`}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,14 @@ export function StockAdjustRow({ row }: { row: InventoryRow }) {
     adjustStockAction,
     initialState,
   );
+
+  const wasPendingRef = useRef(false);
+  useEffect(() => {
+    if (wasPendingRef.current && !isPending && !state.error) {
+      setAdjusting(false);
+    }
+    wasPendingRef.current = isPending;
+  }, [isPending, state]);
 
   return (
     <>

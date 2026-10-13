@@ -1,5 +1,7 @@
 # Business Requirements — Yasen inventory & sales app
 
+> Plain-language description for the shop owner. Technical details: [technical.md](technical.md).
+
 A plain-language description of how the system should work — for review, approval and feedback. Technical details are in a separate document: [technical.md](technical.md).
 
 ## 1. What the system is
@@ -10,7 +12,6 @@ A web application for a shop: tracking products in the shop and warehouse, recor
 
 - **Owner** — sees everything: products, stock, sales, analytics; manages users.
 - **Seller** — enters sales and sees stock, but not analytics or profitability.
-
 (At launch only the owner works; the seller role is reserved for the future.)
 
 ## 3. Products and stock
@@ -55,6 +56,15 @@ Initially sales are entered by **the owner** — for example, in the evening the
 - The owner enters or edits the quantity for a specific day directly in the cell.
 - Stock is shown alongside: how much there was at the start of the period and how much is left now.
 - **Cash/card split — optional (setting):** you can turn on a mode where each cell splits in two — how many of the product were sold for cash and how many by card (e.g. 50 cash, 5 card). If you don't want the hassle, keep one cell and enter however is convenient. The split toggle is right above the table, so it can be switched on and off at any time, depending on whether there's time today to break it down.
+- **Day, week or month view:** the same sales can be entered and viewed one day at a time, a week at a time or a whole month — whichever is more convenient.
+- Each cell has two small fields side by side: cash and card.
+- Everything is saved automatically as you type — there is no Save button.
+- Categories and subcategories can be collapsed. A category is chosen from a list with search.
+- **Search:** type a product name or SKU — or the name of a category or subcategory, and the whole group is shown. Press «/» to jump to search, Enter to go straight to the first match's cell, Esc to clear.
+- When you change the category, filter or search, the table stays scrolled to the same days — you don't lose your place.
+- The table stays fast even with about 2000 products.
+- The day's cash total is a small button at the top: click it to see cash, card and the day's discounts.
+- **Product notes** (instead of notes in different inks in the notebooks): each note has a type (its colour), the text, and a switch 'carry over to next month'. In the table a product with notes has small coloured dots next to its name; hover over them (or long-press on a phone) to read the notes, edit them or add a new one. The note types and their colours are set in the settings. The filter can also show only products with notes.
 - **Working without internet:** this table can be filled in even without a connection — data is saved on the device and sent to the database automatically as soon as the internet is back. Nothing is lost or duplicated. Offline works only for entering sales; editing products and prices is online only.
 
 ## 5. Stock adjustments (stocktake)
@@ -62,14 +72,12 @@ Initially sales are entered by **the owner** — for example, in the evening the
 - When the actual quantity doesn't match the system, stock can be corrected manually.
 - A **reason** is given (breakage, shortage, mis-sort, etc.).
 - Every correction is saved in history: who, when, from what to what, and why.
-
 **Monthly stocktake (full count):**
 
 - A separate mode where once a month (or whenever convenient) actual stock in the warehouse is recounted.
 - The owner sees a list of products with system stock and enters the actual quantity next to each.
 - The system highlights where it doesn't match and shows the difference. After posting, stock is aligned to actual, and all discrepancies go into history.
 - The result is a **stocktake report** (system / counted / difference), exportable to PDF and saved so you can compare month to month.
-
 **Correcting mistakes in documents:**
 
 - A delivery, transfer or other document can be corrected after posting. Both versions — before and after — are kept in the history.
@@ -103,7 +111,6 @@ When the supplier responds to a defect, the item is closed in one of three ways:
 - **Same product** — a new unit of the same product comes back to the warehouse.
 - **Substitute** — a different product comes into the warehouse instead.
 - **Money** — no product comes back; the business receives cash compensation.
-
 The whole history stays visible: sold → defect found → sent to supplier → how it was resolved.
 
 ## 9. Restock lists
@@ -137,7 +144,6 @@ Data can be exported out of the system:
 - **Documents for printing — PDF:** stocktake report, transfer document, delivery document — to print, sign or hand over.
 - **Reports for analysis — Excel and PDF:** sales, revenue, profit, discrepancies — so the owner can do their own calculations.
 - Any report, large or small, can be exported to either PDF or Excel — your choice.
-
 **Monthly report of all movement:**
 One place to see everything for the month: what arrived, what was sold, what was returned and how (resellable, defective, replaced with the same / substitute / money), stocktakes and totals.
 
@@ -168,14 +174,15 @@ VAT can be turned on if needed (off by default), with the rate in settings. The 
 ## 13. Questions for the owner
 
 - **Units and packs:** does it ever happen that a product arrives by the box but is sold by the piece (or vice versa)? Our assumption is that each product is counted in one unit, and even if a box arrives with an unknown quantity, it is still counted on receipt to record the delivery. If that's the case, nothing needs to be added; if there are exceptions, please let us know.
+- **Notes in the notebooks — what do the ink colours mean?** For example: red — order, blue — price, green — defect. These will become the default note types (they can be changed later).
+- **Is a note about the product in general or about a specific day?** If notes are sometimes about a specific day (e.g. 'sold at a discount'), we'll link them to the date and mark that day's cell.
+- **Are there notes about a whole category** rather than one product?
 
 ## 14. What comes first
 
 The system is built in stages, so you can start using it as early as possible:
-
 1. **First version:** products and categories (with upload from a file), deliveries, the sales table with cash/card, daily cash totals, stock levels, corrections and moving goods between locations.
 2. **Working without internet** in the sales table.
 3. **Control:** monthly stocktake, customer returns, restock lists, correcting mistakes in documents, printing and exports, the monthly report.
 4. **Analytics and settings:** charts and profit, brand colours and logo, other convenience features.
-
 Until returns arrive in step 3, a return can be recorded as a regular stock correction with a reason.

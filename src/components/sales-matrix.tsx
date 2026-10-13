@@ -199,9 +199,9 @@ export function SalesMatrix({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button
-            type="button"
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={
               <Link
                 href={`?month=${shiftMonth(month, -1)}&locationId=${locationId}`}
@@ -212,9 +212,9 @@ export function SalesMatrix({
           </Button>
           <span className="text-sm text-foreground">{month}</span>
           <Button
-            type="button"
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={
               <Link
                 href={`?month=${shiftMonth(month, 1)}&locationId=${locationId}`}

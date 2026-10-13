@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
@@ -37,6 +37,14 @@ export function CategoryItem({
     boundRename,
     initialState,
   );
+
+  const wasPendingRef = useRef(false);
+  useEffect(() => {
+    if (wasPendingRef.current && !isPending && !state.error) {
+      setEditing(false);
+    }
+    wasPendingRef.current = isPending;
+  }, [isPending, state]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
