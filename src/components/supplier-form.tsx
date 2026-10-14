@@ -20,7 +20,10 @@ export function SupplierForm() {
   );
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-3">
+    <form
+      action={formAction}
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">{t("nameLabel")}</Label>
         <Input id="name" name="name" required />

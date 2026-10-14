@@ -18,6 +18,9 @@ export const stockAdjustmentInputSchema = z.object({
   // already allowed to be negative elsewhere (spec 4.1) and a correction may target that too.
   newQuantity: z.number().int(),
   reason: z.enum(["breakage", "shortage", "mis_sort", "other"]),
+  // Set only when this adjustment is one line of a posted stocktake (spec 11); null for a
+  // manual single-item adjustment made from the stock page.
+  stocktakeId: z.number().int().positive().nullable().optional(),
 });
 
 export type StockAdjustmentInput = z.infer<typeof stockAdjustmentInputSchema>;
@@ -56,6 +59,7 @@ export async function adjustStock(
       newQuantity: input.newQuantity,
       reason: input.reason,
       adjustedBy: userId,
+      stocktakeId: input.stocktakeId ?? null,
     })
     .returning();
 

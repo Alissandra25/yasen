@@ -48,7 +48,7 @@ export function LoginForm({ locale }: { locale: string }) {
           )}
         </p>
       )}
-      <Button type="submit" disabled={isPending}>
+      <Button type="submit" disabled={isPending} className="w-full">
         {t("submit")}
       </Button>
     </form>

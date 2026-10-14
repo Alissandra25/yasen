@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { inventoryTable } from "@/db/schema/inventory";
@@ -194,6 +194,15 @@ export async function listProducts(businessId: number) {
     .select()
     .from(productsTable)
     .where(eq(productsTable.businessId, businessId));
+}
+
+/** Every price change for one product, most recent first — the product detail panel's prices table. */
+export async function listPriceHistory(productId: number) {
+  return getDb()
+    .select()
+    .from(priceHistoryTable)
+    .where(eq(priceHistoryTable.productId, productId))
+    .orderBy(desc(priceHistoryTable.effectiveFrom));
 }
 
 /** Pure, so the archive-candidate rule (spec 3.1) is testable without a database. */

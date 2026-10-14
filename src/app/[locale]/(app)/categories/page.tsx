@@ -1,16 +1,28 @@
 import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CategoryManager,
   type CategoryNode,
 } from "@/components/category-manager";
 import { listCategories } from "@/server/services/categories";
+import { listProducts } from "@/server/services/products";
 import { requireOwner } from "@/server/session";
 
 export default async function CategoriesPage() {
   const user = await requireOwner();
   const t = await getTranslations("categories");
-  const all = await listCategories(user.businessId);
+  const [all, products] = await Promise.all([
+    listCategories(user.businessId),
+    listProducts(user.businessId),
+  ]);
+
+  const productCounts = new Map<number, number>();
+  for (const product of products) {
+    if (product.archived) continue;
+    productCounts.set(
+      product.categoryId,
+      (productCounts.get(product.categoryId) ?? 0) + 1,
+    );
+  }
 
   const visible = all.filter((category) => !category.archived);
   const byParent = new Map<number, typeof visible>();
@@ -23,25 +35,31 @@ export default async function CategoriesPage() {
 
   const tree: CategoryNode[] = visible
     .filter((category) => category.parentId === null)
-    .map((category) => ({
-      id: category.id,
-      name: category.name,
-      subcategories: (byParent.get(category.id) ?? []).map((sub) => ({
-        id: sub.id,
-        name: sub.name,
-      })),
-    }));
+    .map((category) => {
+      const subcategories = byParent.get(category.id) ?? [];
+      const ownCount = productCounts.get(category.id) ?? 0;
+      const subCount = subcategories.reduce(
+        (sum, sub) => sum + (productCounts.get(sub.id) ?? 0),
+        0,
+      );
+      return {
+        id: category.id,
+        name: category.name,
+        productCount: ownCount + subCount,
+        subcategories: subcategories.map((sub) => ({
+          id: sub.id,
+          name: sub.name,
+          productCount: productCounts.get(sub.id) ?? 0,
+        })),
+      };
+    });
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CategoryManager initialCategories={tree} />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-3xl flex-col gap-6 px-6 py-8">
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        {t("title")}
+      </h1>
+      <CategoryManager initialCategories={tree} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { AppHeader } from "@/components/app-header";
+import { AppSidebar } from "@/components/app-sidebar";
 import { getSessionUser } from "@/server/session";
 
 export default async function AppLayout({
@@ -12,9 +12,9 @@ export default async function AppLayout({
   if (!user) redirect(`/${await getLocale()}/login`);
 
   return (
-    <>
-      <AppHeader />
-      {children}
-    </>
+    <div className="flex min-h-svh flex-1 flex-col md:flex-row">
+      <AppSidebar user={user} />
+      <main className="min-w-0 flex-1 overflow-x-auto">{children}</main>
+    </div>
   );
 }

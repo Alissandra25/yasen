@@ -1,5 +1,5 @@
-import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getLocale, getTranslations } from "next-intl/server";
+import { StartStocktakeButton } from "@/components/start-stocktake-button";
 import { StockView } from "@/components/stock-view";
 import { listCategories } from "@/server/services/categories";
 import { listInventory } from "@/server/services/inventory";
@@ -29,6 +29,7 @@ function buildCategoryOptions(
 
 export default async function StockPage() {
   const user = await requireOwner();
+  const locale = await getLocale();
   const t = await getTranslations("stock");
 
   const [inventory, categories, locations] = await Promise.all([
@@ -40,19 +41,18 @@ export default async function StockPage() {
   const categoryOptions = buildCategoryOptions(categories);
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10">
-      <Card className="max-w-4xl">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <StockView
-            inventory={inventory}
-            categories={categoryOptions}
-            locations={locations}
-          />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-5xl flex-col gap-6 px-6 py-8">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {t("title")}
+        </h1>
+        <StartStocktakeButton locale={locale} locations={locations} />
+      </div>
+      <StockView
+        inventory={inventory}
+        categories={categoryOptions}
+        locations={locations}
+      />
     </div>
   );
 }

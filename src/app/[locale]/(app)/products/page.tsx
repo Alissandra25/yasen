@@ -1,6 +1,7 @@
+import { Upload } from "lucide-react";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { ProductForm } from "@/components/product-form";
 import { ProductList } from "@/components/product-list";
 import { getCurrentBusiness } from "@/server/services/business";
@@ -57,30 +58,34 @@ export default async function ProductsPage() {
     .map((supplier) => ({ id: supplier.id, name: supplier.name }));
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10">
-      <Card className="max-w-4xl">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>{t("title")}</CardTitle>
-          <Link
-            href={`/${locale}/products/import`}
-            className="text-sm text-primary underline-offset-4 hover:underline"
-          >
-            {t("importLink")}
-          </Link>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <ProductList
-            products={visibleProducts}
-            categories={categoryOptions}
-            suppliers={supplierOptions}
-            archiveCandidateIds={archiveCandidateIds}
-          />
-          <ProductForm
-            categories={categoryOptions}
-            suppliers={supplierOptions}
-          />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-5xl flex-col gap-6 px-6 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {t("title")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("subtitle", {
+              productCount: visibleProducts.length,
+              categoryCount: categoryOptions.length,
+            })}
+          </p>
+        </div>
+        <Link
+          href={`/${locale}/products/import`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          <Upload className="size-4" />
+          {t("importLink")}
+        </Link>
+      </div>
+      <ProductList
+        products={visibleProducts}
+        categories={categoryOptions}
+        suppliers={supplierOptions}
+        archiveCandidateIds={archiveCandidateIds}
+      />
+      <ProductForm categories={categoryOptions} suppliers={supplierOptions} />
     </div>
   );
 }

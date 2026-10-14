@@ -8,6 +8,12 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useToast } from "@/components/toast-provider";
+import {
   archiveCategoryAction,
   renameCategoryAction,
   type CategoryFormState,
@@ -19,10 +25,11 @@ export function CategoryItem({
   category,
   children,
 }: {
-  category: { id: number; name: string };
+  category: { id: number; name: string; productCount: number };
   children?: React.ReactNode;
 }) {
   const t = useTranslations("categories");
+  const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
   const {
     attributes,
@@ -55,22 +62,32 @@ export function CategoryItem({
     <li
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border border-border px-3 py-2 ${isDragging ? "opacity-50" : ""}`}
+      className={`rounded-lg border border-border bg-card px-3 py-2 ${isDragging ? "opacity-50" : ""}`}
     >
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-label={t("dragHandle")}
-          className="cursor-grab touch-none text-muted-foreground"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="size-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-label={t("dragHandle")}
+                className="cursor-grab touch-none text-muted-foreground"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="size-4" />
+              </button>
+            }
+          />
+          <TooltipContent>{t("dragHandle")}</TooltipContent>
+        </Tooltip>
 
         {!editing ? (
-          <span className="flex-1 text-sm text-foreground">
+          <span className="flex flex-1 items-center gap-2 text-sm text-foreground">
             {category.name}
+            <span className="text-xs font-normal text-muted-foreground">
+              {t("itemCount", { count: category.productCount })}
+            </span>
           </span>
         ) : (
           <form action={formAction} className="flex flex-1 items-center gap-2">
@@ -104,7 +121,12 @@ export function CategoryItem({
             type="button"
             variant="outline"
             size="xs"
-            onClick={() => void archiveCategoryAction(category.id)}
+            onClick={() => {
+              void archiveCategoryAction(category.id);
+              showToast({
+                message: t("archivedToast", { name: category.name }),
+              });
+            }}
           >
             {t("archive")}
           </Button>

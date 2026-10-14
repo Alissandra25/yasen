@@ -26,7 +26,10 @@ export function ProductForm({
   );
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-3">
+    <form
+      action={formAction}
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">{t("nameLabel")}</Label>
         <Input id="name" name="name" required />
@@ -42,7 +45,7 @@ export function ProductForm({
           name="categoryId"
           required
           defaultValue=""
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <option value="" disabled>
             {t("selectCategory")}
@@ -60,7 +63,7 @@ export function ProductForm({
           id="defaultSupplierId"
           name="defaultSupplierId"
           defaultValue=""
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <option value="">{t("noSupplier")}</option>
           {suppliers.map((supplier) => (

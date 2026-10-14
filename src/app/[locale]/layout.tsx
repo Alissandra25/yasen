@@ -1,26 +1,28 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
-import { Geist_Mono, IBM_Plex_Serif, Play } from "next/font/google";
+import { Geist_Mono, Manrope, Unbounded } from "next/font/google";
 import type { Metadata } from "next";
 import { QueryProvider } from "@/components/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ToastProvider } from "@/components/toast-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getCurrentBusiness } from "@/server/services/business";
 import "../globals.css";
 
-// Named "--font-sans" (not "--font-ibm-plex-serif") to match the theme's own
-// `--font-sans: var(--font-sans)` mapping in globals.css — that line only resolves to a real
-// font if something upstream defines this exact variable name in the cascade.
-const ibmPlexSerif = IBM_Plex_Serif({
+// UI typeface (spec 13.5 names it for the tagline; used across the whole app for consistency).
+// Named "--font-sans" to match the theme's `--font-sans: var(--font-sans)` mapping in globals.css.
+const manrope = Manrope({
   variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  subsets: ["cyrillic-ext", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const play = Play({
-  variable: "--font-play",
+// Logo wordmark only ("Ясен", spec 13.5) — never used for body UI text.
+const unbounded = Unbounded({
+  variable: "--font-logo",
   subsets: ["cyrillic-ext", "latin"],
-  weight: ["400", "700"]
-})
+  weight: ["600"],
+});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -50,11 +52,15 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${ibmPlexSerif.variable} ${geistMono.variable} ${play.variable} min-h-full flex flex-col antialiased`}
+        className={`${manrope.variable} ${geistMono.variable} ${unbounded.variable} min-h-full flex flex-col antialiased`}
       >
         <NextIntlClientProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <QueryProvider>{children}</QueryProvider>
+            <QueryProvider>
+              <TooltipProvider delay={400}>
+                <ToastProvider>{children}</ToastProvider>
+              </TooltipProvider>
+            </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

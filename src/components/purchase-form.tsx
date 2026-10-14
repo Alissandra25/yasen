@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormErrorBanner } from "@/components/form-error-banner";
+import { useToast } from "@/components/toast-provider";
 import {
   postPurchaseAction,
   type PostPurchaseActionInput,
@@ -55,6 +57,7 @@ export function PurchaseForm({
   categories: { id: number; label: string }[];
 }) {
   const t = useTranslations("receipts");
+  const { showToast } = useToast();
   const defaultLocationId = locations[0]?.id ?? 0;
 
   const [supplierId, setSupplierId] = useState<number | "">("");
@@ -156,7 +159,7 @@ export function PurchaseForm({
       return;
     }
 
-    setMessage("posted");
+    showToast({ message: t("posted") });
     setSupplierId("");
     setNewSupplierName("");
     setLines([emptyLine(formDefaultLocationId)]);
@@ -165,10 +168,15 @@ export function PurchaseForm({
   const selectedCount = lines.filter((line) => line.selected).length;
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-      <h3 className="text-sm font-semibold text-foreground">
-        {t("newReceiptTitle")}
-      </h3>
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+      <h3 className="font-semibold text-foreground">{t("newReceiptTitle")}</h3>
+
+      {message === "error" && (
+        <FormErrorBanner
+          title={t("invalidInputTitle")}
+          description={t("invalidInput")}
+        />
+      )}
 
       <div className="flex flex-wrap gap-4">
         <div className="flex flex-col gap-1">
@@ -181,7 +189,7 @@ export function PurchaseForm({
                 event.target.value === "" ? "" : Number(event.target.value),
               )
             }
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <option value="">{t("selectSupplier")}</option>
             {suppliers.map((supplier) => (
@@ -209,7 +217,7 @@ export function PurchaseForm({
             onChange={(event) =>
               setFormDefaultLocationId(Number(event.target.value))
             }
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
@@ -225,7 +233,7 @@ export function PurchaseForm({
           <select
             value={bulkLocationId}
             onChange={(event) => setBulkLocationId(Number(event.target.value))}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
@@ -243,13 +251,14 @@ export function PurchaseForm({
         {lines.map((line) => (
           <li
             key={line.key}
-            className="flex flex-wrap items-end gap-3 rounded-lg border border-border p-3"
+            className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background p-3"
           >
             <input
               type="checkbox"
               aria-label={t("selectLine")}
               checked={line.selected}
               onChange={() => toggleSelected(line.key)}
+              className="size-4 rounded border-input accent-primary"
             />
             <div className="flex flex-col gap-1">
               <Label>{t("lineProductLabel")}</Label>
@@ -263,7 +272,7 @@ export function PurchaseForm({
                         : Number(event.target.value),
                   })
                 }
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 <option value="new">{t("newProductOption")}</option>
                 {products.map((product) => (
@@ -299,7 +308,7 @@ export function PurchaseForm({
                             : Number(event.target.value),
                       })
                     }
-                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+                    className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
                     <option value="" />
                     {categories.map((category) => (
@@ -332,7 +341,7 @@ export function PurchaseForm({
                     locationId: Number(event.target.value),
                   })
                 }
-                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 {locations.map((location) => (
                   <option key={location.id} value={location.id}>
@@ -410,13 +419,6 @@ export function PurchaseForm({
           {t("post")}
         </Button>
       </div>
-
-      {message === "error" && (
-        <p className="text-sm text-destructive">{t("invalidInput")}</p>
-      )}
-      {message === "posted" && (
-        <p className="text-sm text-muted-foreground">{t("posted")}</p>
-      )}
     </div>
   );
 }

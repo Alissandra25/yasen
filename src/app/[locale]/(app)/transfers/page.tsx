@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTranslations } from "next-intl/server";
 import { TransferForm } from "@/components/transfer-form";
 import { TransferList } from "@/components/transfer-list";
@@ -53,35 +52,37 @@ export default async function TransfersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10">
-      <Card className="max-w-5xl">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <TransferList
-            transfers={transfers}
-            timezone={business?.timezone ?? "Europe/Kyiv"}
-          />
-          <TransferForm
-            locations={locations}
-            products={products
-              .filter((product) => !product.archived)
-              .map((product) => ({
-                id: product.id,
-                name: product.name,
-                categoryId: product.categoryId,
-              }))}
-            categories={buildCategoryOptions(categories)}
-            stockByLocation={Array.from(stockByProduct.entries()).map(
-              ([productId, perLocation]) => [
-                productId,
-                Array.from(perLocation.entries()),
-              ],
-            )}
-          />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-6xl flex-col gap-6 px-6 py-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {t("title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t("subtitle", { count: transfers.length })}
+        </p>
+      </div>
+      <TransferList
+        transfers={transfers}
+        timezone={business?.timezone ?? "Europe/Kyiv"}
+      />
+      <TransferForm
+        locations={locations}
+        products={products
+          .filter((product) => !product.archived)
+          .map((product) => ({
+            id: product.id,
+            name: product.name,
+            categoryId: product.categoryId,
+            minStock: product.minStock,
+          }))}
+        categories={buildCategoryOptions(categories)}
+        stockByLocation={Array.from(stockByProduct.entries()).map(
+          ([productId, perLocation]) => [
+            productId,
+            Array.from(perLocation.entries()),
+          ],
+        )}
+      />
     </div>
   );
 }

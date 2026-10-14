@@ -107,3 +107,30 @@ export function businessCurrentMonth(
 ): string {
   return businessToday(timeZone, now).slice(0, 7);
 }
+
+/** The Monday on or before `dateOnly` (ISO week start), as a date-only string. */
+export function weekStartDate(dateOnly: string): string {
+  const epoch = dateOnlyToUtcEpoch(dateOnly);
+  // getUTCDay(): 0 = Sunday … 6 = Saturday. Days to subtract to land on Monday.
+  const weekday = new Date(epoch).getUTCDay();
+  const daysSinceMonday = weekday === 0 ? 6 : weekday - 1;
+  return utcEpochToDateOnly(epoch - daysSinceMonday * MS_PER_DAY);
+}
+
+/** The seven date-only strings (Monday through Sunday) of the week starting `weekStart`. */
+export function daysInWeek(weekStart: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDaysToDateString(weekStart, i));
+}
+
+/** Adds (or subtracts) whole weeks to a Monday-aligned date-only string. */
+export function shiftWeek(weekStart: string, deltaWeeks: number): string {
+  return addDaysToDateString(weekStart, deltaWeeks * 7);
+}
+
+/** The ISO week (Monday start) containing "today" in the business time zone. */
+export function businessCurrentWeekStart(
+  timeZone: string,
+  now: Date = new Date(),
+): string {
+  return weekStartDate(businessToday(timeZone, now));
+}

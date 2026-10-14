@@ -2,9 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { ArrowLeftRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormErrorBanner } from "@/components/form-error-banner";
+import { useToast } from "@/components/toast-provider";
 import { postTransferAction } from "@/server/actions/transfers";
+
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
 
 export function TransferForm({
   locations,
@@ -13,12 +20,18 @@ export function TransferForm({
   stockByLocation,
 }: {
   locations: { id: number; name: string }[];
-  products: { id: number; name: string; categoryId: number }[];
+  products: {
+    id: number;
+    name: string;
+    categoryId: number;
+    minStock: number;
+  }[];
   categories: { id: number; label: string }[];
   /** productId -> locationId -> quantity, so the form can show/limit by what's actually there. */
   stockByLocation: [number, [number, number][]][];
 }) {
   const t = useTranslations("transfers");
+  const { showToast } = useToast();
 
   const stockMap = useMemo(() => {
     const outer = new Map<number, Map<number, number>>();
@@ -33,6 +46,8 @@ export function TransferForm({
     locations[1]?.id ?? locations[0]?.id ?? 0,
   );
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [belowMinOnly, setBelowMinOnly] = useState(false);
   const [selected, setSelected] = useState<Map<number, string>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<"error" | "posted" | null>(null);
@@ -41,12 +56,26 @@ export function TransferForm({
     available: number;
   } | null>(null);
 
+  function swapDirection() {
+    setFromLocationId(toLocationId);
+    setToLocationId(fromLocationId);
+  }
+
+  const searchQuery = normalize(search);
   const availableProducts = products.filter((product) => {
     if (categoryFilter && String(product.categoryId) !== categoryFilter) {
       return false;
     }
+    if (searchQuery && !normalize(product.name).includes(searchQuery)) {
+      return false;
+    }
     const qty = stockMap.get(product.id)?.get(fromLocationId) ?? 0;
-    return qty > 0;
+    if (qty <= 0) return false;
+    if (belowMinOnly) {
+      const destinationQty = stockMap.get(product.id)?.get(toLocationId) ?? 0;
+      if (destinationQty >= product.minStock) return false;
+    }
+    return true;
   });
 
   function toggleSelected(productId: number) {
@@ -105,15 +134,27 @@ export function TransferForm({
       return;
     }
 
-    setMessage("posted");
+    showToast({ message: t("posted") });
     setSelected(new Map());
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-      <h3 className="text-sm font-semibold text-foreground">
-        {t("newTransferTitle")}
-      </h3>
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+      <h3 className="font-semibold text-foreground">{t("newTransferTitle")}</h3>
+
+      {message === "error" && (
+        <FormErrorBanner
+          title={t("invalidInputTitle")}
+          description={
+            errorDetail
+              ? t("insufficientStockError", {
+                  product: errorDetail.productName,
+                  available: errorDetail.available,
+                })
+              : t("invalidInput")
+          }
+        />
+      )}
 
       <div className="flex flex-wrap gap-4">
         <div className="flex flex-col gap-1">
@@ -123,7 +164,7 @@ export function TransferForm({
           <select
             value={fromLocationId}
             onChange={(event) => setFromLocationId(Number(event.target.value))}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
@@ -132,6 +173,16 @@ export function TransferForm({
             ))}
           </select>
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t("swapDirection")}
+          className="mt-5"
+          onClick={swapDirection}
+        >
+          <ArrowLeftRight className="size-4" />
+        </Button>
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">
             {t("toLabel")}
@@ -139,7 +190,7 @@ export function TransferForm({
           <select
             value={toLocationId}
             onChange={(event) => setToLocationId(Number(event.target.value))}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             {locations.map((location) => (
               <option key={location.id} value={location.id}>
@@ -147,6 +198,20 @@ export function TransferForm({
               </option>
             ))}
           </select>
+        </div>
+        <div className="relative flex flex-col gap-1">
+          <label className="text-xs text-muted-foreground">
+            {t("searchPlaceholder")}
+          </label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="h-8 w-48 rounded-lg border border-input bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            />
+          </div>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">
@@ -155,7 +220,7 @@ export function TransferForm({
           <select
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <option value="">{t("allCategories")}</option>
             {categories.map((category) => (
@@ -166,6 +231,16 @@ export function TransferForm({
           </select>
         </div>
       </div>
+
+      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={belowMinOnly}
+          onChange={(event) => setBelowMinOnly(event.target.checked)}
+          className="size-4 rounded border-input accent-primary"
+        />
+        {t("belowMinFilter")}
+      </label>
 
       {fromLocationId === toLocationId && (
         <p className="text-sm text-destructive">{t("sameLocationError")}</p>
@@ -178,12 +253,13 @@ export function TransferForm({
           return (
             <li
               key={product.id}
-              className="flex items-center gap-3 rounded-lg border border-border px-3 py-2"
+              className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 has-[input:checked]:border-primary/40 has-[input:checked]:bg-accent/40"
             >
               <input
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => toggleSelected(product.id)}
+                className="size-4 rounded border-input accent-primary"
               />
               <span className="flex-1 text-sm text-foreground">
                 {product.name}
@@ -192,14 +268,24 @@ export function TransferForm({
                 {t("availableLabel")}: {available}
               </span>
               {isSelected && (
-                <Input
-                  className="w-20"
-                  inputMode="numeric"
-                  value={selected.get(product.id) ?? ""}
-                  onChange={(event) =>
-                    setQuantity(product.id, event.target.value)
-                  }
-                />
+                <>
+                  <Input
+                    className="w-20"
+                    inputMode="numeric"
+                    value={selected.get(product.id) ?? ""}
+                    onChange={(event) =>
+                      setQuantity(product.id, event.target.value)
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setQuantity(product.id, String(available))}
+                  >
+                    {t("fillAll")}
+                  </Button>
+                </>
               )}
             </li>
           );
@@ -221,20 +307,6 @@ export function TransferForm({
           {t("post")}
         </Button>
       </div>
-
-      {message === "error" && (
-        <p className="text-sm text-destructive">
-          {errorDetail
-            ? t("insufficientStockError", {
-                product: errorDetail.productName,
-                available: errorDetail.available,
-              })
-            : t("invalidInput")}
-        </p>
-      )}
-      {message === "posted" && (
-        <p className="text-sm text-muted-foreground">{t("posted")}</p>
-      )}
     </div>
   );
 }

@@ -23,7 +23,8 @@ import { CategoryItem } from "@/components/category-item";
 export interface CategoryNode {
   id: number;
   name: string;
-  subcategories: { id: number; name: string }[];
+  productCount: number;
+  subcategories: { id: number; name: string; productCount: number }[];
 }
 
 // One DndContext per sibling group (top-level categories, and each category's own subcategory
@@ -100,7 +101,7 @@ export function CategoryManager({
 
   function reorderSubcategories(
     parentId: number,
-    next: { id: number; name: string }[],
+    next: { id: number; name: string; productCount: number }[],
   ) {
     setCategories((prev) =>
       prev.map((category) =>

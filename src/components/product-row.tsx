@@ -1,10 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/toast-provider";
 import {
   archiveProductAction,
   updateProductAction,
@@ -30,6 +34,8 @@ export function ProductRow({
   onToggleSelected: () => void;
 }) {
   const t = useTranslations("products");
+  const locale = useLocale();
+  const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
   const boundAction = updateProductAction.bind(null, product.id);
   const [state, formAction, isPending] = useActionState(
@@ -51,26 +57,29 @@ export function ProductRow({
 
   if (!editing) {
     return (
-      <li className="flex items-center justify-between gap-4 rounded-lg border border-border px-3 py-2">
+      <li
+        className={`flex items-center justify-between gap-4 rounded-lg border px-3 py-2 ${
+          selected ? "border-primary/40 bg-accent/40" : "border-border bg-card"
+        }`}
+      >
         <div className="flex items-center gap-3">
           <input
             type="checkbox"
             checked={selected}
             onChange={onToggleSelected}
             aria-label={t("selectForBulkAction")}
+            className="size-4 rounded border-input accent-primary"
           />
           <div>
-            <p className="text-sm font-medium text-foreground">
+            <p className="flex items-center gap-2 text-sm font-medium text-foreground">
               {product.name}
               {product.needsReview && (
-                <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                <Badge className="bg-warning text-warning-foreground">
                   {t("needsReviewBadge")}
-                </span>
+                </Badge>
               )}
               {isArchiveCandidate && (
-                <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                  {t("archiveCandidateBadge")}
-                </span>
+                <Badge variant="secondary">{t("archiveCandidateBadge")}</Badge>
               )}
             </p>
             <p className="text-xs text-muted-foreground">
@@ -92,17 +101,29 @@ export function ProductRow({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => void archiveProductAction(product.id)}
+            onClick={() => {
+              void archiveProductAction(product.id);
+              showToast({
+                message: t("archivedToast", { name: product.name }),
+              });
+            }}
           >
             {t("archive")}
           </Button>
+          <Link
+            href={`/${locale}/products/${product.id}`}
+            aria-label={t("openDetail", { name: product.name })}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="size-4" />
+          </Link>
         </div>
       </li>
     );
   }
 
   return (
-    <li className="rounded-lg border border-border px-3 py-2">
+    <li className="rounded-lg border border-border bg-card px-3 py-2">
       <form action={formAction} className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`name-${product.id}`}>{t("nameLabel")}</Label>
@@ -131,7 +152,7 @@ export function ProductRow({
             name="categoryId"
             defaultValue={product.categoryId}
             required
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -148,7 +169,7 @@ export function ProductRow({
             id={`defaultSupplierId-${product.id}`}
             name="defaultSupplierId"
             defaultValue={product.defaultSupplierId ?? ""}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
           >
             <option value="">{t("noSupplier")}</option>
             {suppliers.map((supplier) => (

@@ -233,3 +233,43 @@ export async function getStockAtPeriodStart(
   }
   return result;
 }
+
+/**
+ * The sale price in effect on `asOfDate` for every product (spec 3.5.1's Day view shows a price
+ * column). Same "pick the latest effective_from not after the date" rule as recordSale, just for
+ * every product in the business at once instead of one product at insert time.
+ */
+export async function listCurrentSalePrices(
+  businessId: number,
+  asOfDate: string,
+): Promise<Map<number, number>> {
+  const rows = await getDb()
+    .select({
+      productId: priceHistoryTable.productId,
+      salePrice: priceHistoryTable.salePrice,
+      effectiveFrom: priceHistoryTable.effectiveFrom,
+    })
+    .from(priceHistoryTable)
+    .innerJoin(productsTable, eq(productsTable.id, priceHistoryTable.productId))
+    .where(
+      and(
+        eq(productsTable.businessId, businessId),
+        lte(priceHistoryTable.effectiveFrom, asOfDate),
+      ),
+    );
+
+  const latestByProduct = new Map<number, { effectiveFrom: string }>();
+  const result = new Map<number, number>();
+  for (const row of rows) {
+    if (row.salePrice === null) continue;
+    const latest = latestByProduct.get(row.productId);
+    if (
+      !latest ||
+      compareDateStrings(row.effectiveFrom, latest.effectiveFrom) > 0
+    ) {
+      latestByProduct.set(row.productId, { effectiveFrom: row.effectiveFrom });
+      result.set(row.productId, row.salePrice);
+    }
+  }
+  return result;
+}

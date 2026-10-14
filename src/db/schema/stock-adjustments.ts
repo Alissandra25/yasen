@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { locationsTable } from "./locations";
 import { productsTable } from "./products";
+import { stocktakesTable } from "./stocktakes";
 import { usersTable } from "./users";
 import { timestamps } from "./_shared/timestamps";
 
@@ -19,11 +20,10 @@ export const stockAdjustmentReasonEnum = pgEnum("stock_adjustment_reason", [
   "other",
 ]);
 
-// No business_id or stocktake_id yet: scoped via product_id -> products.business_id, same
-// precedent as inventory/purchase_items/sales. stocktake_id (spec 11: "link to stocktake if the
-// adjustment came from one") is deliberately deferred until Stage 3's stocktakes table exists —
-// adding an unconstrained integer "FK" to a table that doesn't exist yet would be a foot-gun,
-// not a real reference.
+// No business_id yet: scoped via product_id -> products.business_id, same precedent as
+// inventory/purchase_items/sales. stocktake_id (spec 11: "link to stocktake if the adjustment
+// came from one") is nullable — set only for the adjustments a stocktake posting writes;
+// a manual single-item adjustment leaves it null.
 export const stockAdjustmentsTable = pgTable(
   "stock_adjustments",
   {
@@ -43,6 +43,7 @@ export const stockAdjustmentsTable = pgTable(
     adjustedAt: timestamp("adjusted_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    stocktakeId: integer("stocktake_id").references(() => stocktakesTable.id),
     ...timestamps,
   },
   (table) => [

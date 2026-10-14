@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, count, eq, lt } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { inventoryTable } from "@/db/schema/inventory";
 import { locationsTable } from "@/db/schema/locations";
@@ -9,6 +9,7 @@ export interface InventoryRow {
   productName: string;
   sku: string | null;
   categoryId: number;
+  minStock: number;
   locationId: number;
   locationName: string;
   quantity: number;
@@ -28,6 +29,7 @@ export async function listInventory(
       productName: productsTable.name,
       sku: productsTable.sku,
       categoryId: productsTable.categoryId,
+      minStock: productsTable.minStock,
       locationId: inventoryTable.locationId,
       locationName: locationsTable.name,
       quantity: inventoryTable.quantity,
@@ -43,4 +45,22 @@ export async function listInventory(
       ),
     )
     .orderBy(asc(productsTable.name), asc(locationsTable.name));
+}
+
+/** Count of negative-stock rows for active products — the sidebar's Stock-levels badge. */
+export async function countNegativeInventory(
+  businessId: number,
+): Promise<number> {
+  const [row] = await getDb()
+    .select({ value: count() })
+    .from(inventoryTable)
+    .innerJoin(productsTable, eq(productsTable.id, inventoryTable.productId))
+    .where(
+      and(
+        eq(productsTable.businessId, businessId),
+        eq(productsTable.archived, false),
+        lt(inventoryTable.quantity, 0),
+      ),
+    );
+  return row?.value ?? 0;
 }

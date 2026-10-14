@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PurchaseForm } from "@/components/purchase-form";
 import { PurchaseList } from "@/components/purchase-list";
 import { getCurrentBusiness } from "@/server/services/business";
@@ -54,24 +53,26 @@ export default async function ReceiptsPage() {
   const categoryOptions = buildCategoryOptions(categories);
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-10">
-      <Card className="max-w-5xl">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <PurchaseList
-            purchases={purchases}
-            timezone={business?.timezone ?? "Europe/Kyiv"}
-          />
-          <PurchaseForm
-            suppliers={activeSuppliers}
-            locations={locations}
-            products={activeProducts}
-            categories={categoryOptions}
-          />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-6xl flex-col gap-6 px-6 py-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {t("title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t("subtitle", { count: purchases.length })}
+        </p>
+      </div>
+      <PurchaseList
+        purchases={purchases}
+        timezone={business?.timezone ?? "Europe/Kyiv"}
+        currency={business?.currency ?? "UAH"}
+      />
+      <PurchaseForm
+        suppliers={activeSuppliers}
+        locations={locations}
+        products={activeProducts}
+        categories={categoryOptions}
+      />
     </div>
   );
 }

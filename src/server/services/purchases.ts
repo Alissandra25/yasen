@@ -2,10 +2,12 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { inventoryTable } from "@/db/schema/inventory";
+import { locationsTable } from "@/db/schema/locations";
 import { productsTable } from "@/db/schema/products";
 import { purchaseItemsTable } from "@/db/schema/purchase-items";
 import { purchasesTable } from "@/db/schema/purchases";
 import { suppliersTable } from "@/db/schema/suppliers";
+import { usersTable } from "@/db/schema/users";
 import { normalizeName } from "@/lib/strings";
 import {
   createProduct,
@@ -207,8 +209,17 @@ export async function getPurchaseWithItems(
 ) {
   const db = getDb();
   const [purchase] = await db
-    .select()
+    .select({
+      id: purchasesTable.id,
+      createdAt: purchasesTable.createdAt,
+      supplierId: purchasesTable.supplierId,
+      supplierName: suppliersTable.name,
+      defaultLocationId: purchasesTable.defaultLocationId,
+      createdByRole: usersTable.role,
+    })
     .from(purchasesTable)
+    .innerJoin(suppliersTable, eq(suppliersTable.id, purchasesTable.supplierId))
+    .innerJoin(usersTable, eq(usersTable.id, purchasesTable.createdBy))
     .where(
       and(
         eq(purchasesTable.id, purchaseId),
@@ -222,7 +233,9 @@ export async function getPurchaseWithItems(
       id: purchaseItemsTable.id,
       productId: purchaseItemsTable.productId,
       productName: productsTable.name,
+      sku: productsTable.sku,
       locationId: purchaseItemsTable.locationId,
+      locationName: locationsTable.name,
       quantity: purchaseItemsTable.quantity,
       purchasePrice: purchaseItemsTable.purchasePrice,
       salePrice: purchaseItemsTable.salePrice,
@@ -231,6 +244,10 @@ export async function getPurchaseWithItems(
     .innerJoin(
       productsTable,
       eq(productsTable.id, purchaseItemsTable.productId),
+    )
+    .innerJoin(
+      locationsTable,
+      eq(locationsTable.id, purchaseItemsTable.locationId),
     )
     .where(eq(purchaseItemsTable.purchaseId, purchaseId));
 
@@ -244,10 +261,11 @@ export interface PurchaseSummary {
   supplierName: string;
   defaultLocationId: number;
   lineCount: number;
-  totalQuantity: number;
+  totalAmount: number;
+  locationNames: string[];
 }
 
-/** Read-only summary for the receipts list page: one row per receipt with its line/quantity totals. */
+/** Read-only summary for the receipts list page: one row per receipt with its line/money totals. */
 export async function listPurchasesWithSummary(
   businessId: number,
 ): Promise<PurchaseSummary[]> {
@@ -269,31 +287,44 @@ export async function listPurchasesWithSummary(
     .select({
       purchaseId: purchaseItemsTable.purchaseId,
       quantity: purchaseItemsTable.quantity,
+      purchasePrice: purchaseItemsTable.purchasePrice,
+      locationId: purchaseItemsTable.locationId,
+      locationName: locationsTable.name,
     })
     .from(purchaseItemsTable)
     .innerJoin(
       purchasesTable,
       eq(purchasesTable.id, purchaseItemsTable.purchaseId),
     )
+    .innerJoin(
+      locationsTable,
+      eq(locationsTable.id, purchaseItemsTable.locationId),
+    )
     .where(eq(purchasesTable.businessId, businessId));
 
   const aggregates = new Map<
     number,
-    { lineCount: number; totalQuantity: number }
+    { lineCount: number; totalAmount: number; locations: Map<number, string> }
   >();
   for (const item of items) {
     const existing = aggregates.get(item.purchaseId) ?? {
       lineCount: 0,
-      totalQuantity: 0,
+      totalAmount: 0,
+      locations: new Map<number, string>(),
     };
     existing.lineCount += 1;
-    existing.totalQuantity += item.quantity;
+    existing.totalAmount += item.quantity * item.purchasePrice;
+    existing.locations.set(item.locationId, item.locationName);
     aggregates.set(item.purchaseId, existing);
   }
 
-  return purchases.map((purchase) => ({
-    ...purchase,
-    lineCount: aggregates.get(purchase.id)?.lineCount ?? 0,
-    totalQuantity: aggregates.get(purchase.id)?.totalQuantity ?? 0,
-  }));
+  return purchases.map((purchase) => {
+    const aggregate = aggregates.get(purchase.id);
+    return {
+      ...purchase,
+      lineCount: aggregate?.lineCount ?? 0,
+      totalAmount: aggregate?.totalAmount ?? 0,
+      locationNames: aggregate ? Array.from(aggregate.locations.values()) : [],
+    };
+  });
 }

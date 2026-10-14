@@ -131,7 +131,6 @@ export interface TransferSummary {
   fromLocationName: string;
   toLocationName: string;
   lineCount: number;
-  totalQuantity: number;
 }
 
 /** Read-only summary for the transfers list page: one row per transfer with its totals. */
@@ -161,7 +160,6 @@ export async function listTransfersWithSummary(
   const items = await db
     .select({
       transferId: transferItemsTable.transferId,
-      quantity: transferItemsTable.quantity,
     })
     .from(transferItemsTable)
     .innerJoin(
@@ -170,18 +168,9 @@ export async function listTransfersWithSummary(
     )
     .where(eq(transfersTable.businessId, businessId));
 
-  const aggregates = new Map<
-    number,
-    { lineCount: number; totalQuantity: number }
-  >();
+  const lineCounts = new Map<number, number>();
   for (const item of items) {
-    const existing = aggregates.get(item.transferId) ?? {
-      lineCount: 0,
-      totalQuantity: 0,
-    };
-    existing.lineCount += 1;
-    existing.totalQuantity += item.quantity;
-    aggregates.set(item.transferId, existing);
+    lineCounts.set(item.transferId, (lineCounts.get(item.transferId) ?? 0) + 1);
   }
 
   return transfers.map((transfer) => ({
@@ -189,7 +178,6 @@ export async function listTransfersWithSummary(
     createdAt: transfer.createdAt,
     fromLocationName: locationNames.get(transfer.fromLocationId) ?? "",
     toLocationName: locationNames.get(transfer.toLocationId) ?? "",
-    lineCount: aggregates.get(transfer.id)?.lineCount ?? 0,
-    totalQuantity: aggregates.get(transfer.id)?.totalQuantity ?? 0,
+    lineCount: lineCounts.get(transfer.id) ?? 0,
   }));
 }

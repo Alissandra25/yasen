@@ -2,9 +2,11 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/toast-provider";
 import {
   archiveSupplierAction,
   updateSupplierAction,
@@ -24,6 +26,7 @@ export function SupplierRow({
   onToggleSelected: () => void;
 }) {
   const t = useTranslations("suppliers");
+  const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
   const boundAction = updateSupplierAction.bind(null, supplier.id);
   const [state, formAction, isPending] = useActionState(
@@ -41,21 +44,26 @@ export function SupplierRow({
 
   if (!editing) {
     return (
-      <li className="flex items-center justify-between gap-4 rounded-lg border border-border px-3 py-2">
+      <li
+        className={`flex items-center justify-between gap-4 rounded-lg border px-3 py-2 ${
+          selected ? "border-primary/40 bg-accent/40" : "border-border bg-card"
+        }`}
+      >
         <div className="flex items-center gap-3">
           <input
             type="checkbox"
             checked={selected}
             onChange={onToggleSelected}
             aria-label={t("selectForBulkAction")}
+            className="size-4 rounded border-input accent-primary"
           />
           <div>
-            <p className="text-sm font-medium text-foreground">
+            <p className="flex items-center gap-2 text-sm font-medium text-foreground">
               {supplier.name}
               {supplier.needsReview && (
-                <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                <Badge className="bg-warning text-warning-foreground">
                   {t("needsReviewBadge")}
-                </span>
+                </Badge>
               )}
             </p>
             {supplier.contacts && (
@@ -78,7 +86,12 @@ export function SupplierRow({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => void archiveSupplierAction(supplier.id)}
+            onClick={() => {
+              void archiveSupplierAction(supplier.id);
+              showToast({
+                message: t("archivedToast", { name: supplier.name }),
+              });
+            }}
           >
             {t("archive")}
           </Button>
@@ -88,7 +101,7 @@ export function SupplierRow({
   }
 
   return (
-    <li className="rounded-lg border border-border px-3 py-2">
+    <li className="rounded-lg border border-border bg-card px-3 py-2">
       <form action={formAction} className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor={`name-${supplier.id}`}>{t("nameLabel")}</Label>

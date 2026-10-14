@@ -15,7 +15,7 @@ A web application for a small business (retail shop) to track products, record s
 
 - **Owner** — full access: products, warehouse, sales, analytics, user management. Only this role is active at launch.
 - **Seller** — limited access: records sales, sees stock levels. Cannot see analytics or profitability.
-The role model is built into the architecture from day one (RBAC), even though only the owner is used initially.
+  The role model is built into the architecture from day one (RBAC), even though only the owner is used initially.
 
 ## 3. Core Functionality
 
@@ -105,7 +105,9 @@ At launch, sales are entered **by the owner after the fact** — e.g. in the eve
   - Esc clears the search and restores the previous scroll position.
 - **Cash box:** a compact button at the top right with the selected day's total; it opens a popover with cash, card, the day's discount + note, and the total after discounts. In Week / Month, clicking a date in the column header selects that day for the cash box. No cash panel at the bottom of the page.
 - **No unit totals on this screen** (pieces sold per day / month) — that belongs to analytics.
-- **App shell:** a left sidebar with the logo, location switcher, grouped navigation (Daily: Sales, Goods receipt, Transfers; Stock: Stock levels, Catalogue), settings and the user at the bottom; a badge on Stock levels with the number of negative items. Stacks on narrow screens.
+- **App shell:** a left sidebar with the logo, grouped navigation, settings and the user at the bottom; a badge on Stock levels with the number of negative items. Stacks on narrow screens.
+  - **Nav groups (superseded by later mockups):** 'Daily' (Sales, Goods receipt, Transfers), then Stock levels on its own with no group header, then a 'References' group with four separate links — Products, Categories, Suppliers, Locations — instead of one combined 'Catalogue' link. The earlier mockups (1-10) showed a single Catalogue entry and a 'Stock' group header; the later reference-screen mockups (11, 18-21) replaced that with the four-link structure, which is what's built.
+  - **Location switcher** ('Точка: Магазин' under the logo) appears only on the location-scoped daily-ops pages — Sales, Goods receipt, Transfers. Stock levels, the four reference pages and Settings/Account aren't scoped to one location, so they don't show it.
 - **Horizontal scroll is preserved:** changing the category, the Show filter or the search, and collapsing / expanding groups, keeps the horizontal scroll position of the day columns. When the period changes (another week / month), the table scrolls to today if it is inside the period, otherwise to the start of the period.
 - **Virtualization:** with \~2000 products the table body is virtualized with `@tanstack/react-virtual` — the visible tree (category, subcategory and product rows after collapsing, filters and search) is flattened into one list of rows, and only rows in the viewport are rendered. Each row type has a fixed height, so no measuring is needed. The header row and the product column stay sticky.
 - **Product notes in the table:** the paper notebooks have notes next to products in different ink colours; the app replaces them with typed notes (data model: product_notes, note_types).
@@ -113,6 +115,8 @@ At launch, sales are entered **by the owner after the fact** — e.g. in the eve
   - Hover, keyboard focus or a long press on mobile opens a popover listing the notes: type label with its colour, text, a 'carries over' badge when set, an edit action and '+ note'.
   - Colour is never the only signal: the type name is always shown in the popover, and the dot has an accessible label.
   - A note can be added from the same popover on a product that has none (via the row's context action).
+- **Redesign pass scope:** the mockups also surface two forward-looking mechanics that `.claude/rules/ui.md` and `db.md` already describe for agents working in this codebase — fractional product quantities with units (`src/lib/quantity.ts`, `products.unit`, thousandths storage) and `client_uuid` idempotency on every posted document type, not just sales. Neither is in this spec's data model (11) yet, and neither is listed in `docs/CURRENT_STAGE.md`. The redesign restyles the Stage 1 screens that already exist (theme, typography, sidebar, the built pages) to match the mockups' look; it does not implement unit/fractional-quantity support, extend `client_uuid` idempotency beyond sales, or build Stage 3+ pages the mockups depict but the app doesn't have yet (monthly stocktake, product notes). Those stay as pending follow-up work.
+  - **Dev seed data, meanwhile:** `scripts/seed-data/products.csv` (invented catalogue for local dev) already carries a `unit` column and decimal stock for m/m2/kg products, anticipating this feature. Until `products.unit`/`quantity.ts` land, `scripts/seed-catalog.mts` ignores `unit` and rounds those decimal quantities to the nearest whole unit, matching every other current reader/writer of `inventory.quantity` (a plain integer, not thousandths). Re-seed or adjust once fractional quantities are implemented.
 
 ### 3.6 Offline Mode (Sales Matrix Only)
 
@@ -192,13 +196,13 @@ A business may not want to track suppliers at all. A business setting (suppliers
 - Stock can become **negative**.
 - Negative items are **highlighted** separately in the stock list as a signal to reconcile — the discrepancy is a business accounting issue, not a reason to block the sale.
 - The owner sees problem items and makes a manual adjustment.
-**Stock adjustments:**
+  **Stock adjustments:**
 
 - Adjusting stock is a **permission tied to a role**, not hard-wired to the owner. At launch the owner has it; later it can be granted to another role without rewriting logic.
 - When adjusting, the user specifies a **reason** (e.g. breakage, shortage, mis-sort, etc.).
 - Every adjustment is recorded in the **audit log**: who, when, from old value to new, with the reason — so it can be verified.
-**Full stocktake (separate mode):**
-Unlike a one-off adjustment of a single item, this is a bulk count of the whole warehouse in one go (typically once a month).
+  **Full stocktake (separate mode):**
+  Unlike a one-off adjustment of a single item, this is a bulk count of the whole warehouse in one go (typically once a month).
 
 - The owner opens a stocktake for a location: a list of products with **system stock**, and next to each a field for the **actual counted quantity**.
 - The system immediately highlights rows that don't match and shows the difference (+/−).
@@ -224,18 +228,18 @@ What happens to the product depends on the reason. **Return type** determines th
 **Type 1 — resellable (didn't fit):** wrong size, changed mind, etc.
 
 - The product goes back into stock (warehouse or shop) and is available for sale again.
-**Type 2 — defective:** does not go back on sale. Split into two subcategories:
+  **Type 2 — defective:** does not go back on sale. Split into two subcategories:
 
 - **2a — for supplier replacement:** goes into a separate "for replacement" list; the supplier is expected to compensate.
 - **2b — write-off as a loss:** a pure business loss, no compensation.
-**Common to all types:**
+  **Common to all types:**
 
 - The sale is reversed: revenue and profit for the item are reduced.
 - **Customer refund and cash reconciliation:** recording a return automatically reduces the day's revenue by the refund amount. Only the **refund method** matters (cash from the till / transfer to a card), which the owner specifies manually — reconciliation is reduced in that column. The original payment method is unknown (the matrix has no individual receipts) and is not taken into account. The date is the day the return is recorded, because that is when the cash leaves the till.
 - The return is recorded in the audit log with its type and reason.
 - Defective items (2a/2b) are tracked in a separate model, not mixed with resellable stock.
-**Closing the replacement loop (type 2a — supplier replacement):**
-An item in the "for replacement" list has a status: **awaiting replacement → resolved**. When the supplier responds, the owner closes the item with one of three types:
+  **Closing the replacement loop (type 2a — supplier replacement):**
+  An item in the "for replacement" list has a status: **awaiting replacement → resolved**. When the supplier responds, the owner closes the item with one of three types:
 
 - **Same product (1:1):** a new unit of the same product is received into warehouse stock as resellable.
 - **Substitute (different item):** a different product comes into the warehouse; quantity and item may differ, the record captures what it was replaced with.
@@ -290,7 +294,7 @@ Posted documents (goods receipts, transfers, etc.) can be corrected after postin
 - **Authorisation:** sessions with role-based access (owner / seller) — details in 9.
 - **Charts:** a charting library (e.g. Recharts).
 - **Money — integer minor units (cross-cutting rule):** all monetary values (prices, totals, compensation) are stored as an integer number of kopecks/cents, never as floating point, to avoid rounding errors. Integer minor units were chosen (rather than numeric) because calculations live in JS, which has no exact decimal type: integers stay exact both in the database and in code. Conversion to decimals and the currency symbol happen only at the display layer.
-  - *Note:* profitability and shares produce fractional results (half-kopecks) — the rounding rule is defined below.
+  - _Note:_ profitability and shares produce fractional results (half-kopecks) — the rounding rule is defined below.
 - **Money rounding and parsing (cross-cutting rule):**
   - Fractions are allowed only inside a calculation and are rounded once, at the end, half away from zero (0.5 kopeck → 1).
   - VAT is calculated per document line; the document total is the sum of the rounded lines, so parts always sum to the whole.
@@ -342,10 +346,11 @@ A mandatory part of development, three levels with different requirements.
 ## 11. Data Model (Draft)
 
 > **Cross-cutting rule — timestamps:** every table has created_at and updated_at, even where the list below doesn't mention them. PostgreSQL doesn't add them on its own, so they are declared via a shared helper in the Drizzle schema that every table includes. created_at — DEFAULT now() (the database sets it on insert). updated_at — maintained via Drizzle's $onUpdate; this only fires for changes made through Drizzle, so direct SQL changes (data migrations, manual fixes) must set it explicitly. If a database-level guarantee is ever needed — a PostgreSQL trigger.
+
 - **businesses** — id, name, description (nullable — short tagline, shown wherever the business name appears, e.g. the app header), vat_enabled, vat_rate, archive_period_products (default 1 month), archive_period_suppliers (default 3 months), timezone (IANA, default Europe/Kyiv), currency (ISO 4217, default UAH), suppliers_enabled (default true), period_lock_grace_days (default 5), primary_color (hex, nullable — main brand colour), accent_color (hex, nullable — accent), logo (bytea, nullable), logo_mime_type (nullable), created_at — business settings (archive-candidate periods here; restock rule defaults in restock_rules).
 - **locations** — id, business_id, name, type (shop/warehouse).
 - **categories** — id, business_id, name, parent_id (nullable — empty for a category, set for a subcategory), sort_order (display order within the parent; changed via drag & drop in settings; named sort_order rather than order because ORDER is a reserved SQL word), archived.
-- **note_types** — id, business_id, name, color, sort_order. Per-business reference list of note types (they mirror the ink colours of the paper notebooks); configured in settings.
+- **note_types** — id, business_id, name, color, sort_order. Per-business reference list of note types (they mirror the ink colours of the paper notebooks); configured in settings. **Built without delete/archive for now:** the settings UI can create and rename/recolour a note type, but not remove one — product_notes.note_type_id is a required foreign key with no cascade, and the spec doesn't define what should happen to existing notes of a deleted type. Revisit alongside an archived flag (matching categories/suppliers/locations) when that's decided.
 - **product_notes** — id, business_id, product_id, note_type_id, text, valid_from (month), valid_to (nullable month; empty = carries over to following months), created_by, created_at, updated_at. The 'carry over to next month' toggle maps to valid_to: on → valid_to is empty; off → valid_to = the note's month. A note is active for a month when valid_from ≤ month and (valid_to is empty or valid_to ≥ month). Notes are never copied month to month — carrying over is just an open range. Changes are written to the audit log.
 - **users** — id, business_id, email, password_hash (bcrypt), role (owner/seller), theme (light/dark/system, default system), created_at. Sessions are server-side, key in an httpOnly secure cookie. Password reset tokens are single-use, short-lived (see 9).
 - **products** — id, business_id, name, sku, category_id (reference to categories — the product's most specific category: the subcategory if there is one, otherwise the category), min_stock, default_supplier_id (nullable — main supplier; defaults to the supplier of the latest receipt, editable), velocity_threshold_pct (nullable — per-product override of the activity threshold; empty → business default applies), needs_review (flag "created quickly from a receipt, worth reviewing"), archived.
@@ -402,9 +407,9 @@ A mandatory part of development, three levels with different requirements.
 ### 12.5 Hosting
 
 - **Development stage — Vercel.** Native to Next.js, deployment straight from GitHub, free Hobby plan (100 GB traffic, 1M function invocations — plenty of headroom). Convenient while functionality is being built. Downside for this project's goals: it hides the entire deployment layer, so there's nothing to show in terms of infrastructure skills — hence the move at the next stage.
-  - *Limit to remember:* a Vercel function must complete within 60 s (Hobby) / 300 s (Pro) — important for generating large PDFs / heavy reports.
+  - _Limit to remember:_ a Vercel function must complete within 60 s (Hobby) / 300 s (Pro) — important for generating large PDFs / heavy reports.
 - **Maturity stage — Railway ($5/month, Hobby plan).** Accepts a Docker image, PostgreSQL is added in one click in the same project (connection string automatically in env vars), **no sleeping** — the app is always live. Chosen deliberately: free container tiers have effectively disappeared in 2026 (Railway and [Fly.io](http://Fly.io) dropped their free tiers; Render free sleeps after 15 min idle and takes 30–60 s to wake — unacceptable since the friend actually uses the app). For $5 — a live service for her + real Docker and a self-managed database for the portfolio.
-  - *Alternatives considered:* [Fly.io](http://Fly.io) (pay-as-you-go, \~$5, the most "Docker-centric", but more manual work with fly.toml); Render paid instance (\~$7, no sleeping). Railway chosen for its balance of convenience and control.
+  - _Alternatives considered:_ [Fly.io](http://Fly.io) (pay-as-you-go, \~$5, the most "Docker-centric", but more manual work with fly.toml); Render paid instance (\~$7, no sleeping). Railway chosen for its balance of convenience and control.
 - **Database — PostgreSQL on Railway** (at the maturity stage, together with the app). During development on Vercel the database can live on Neon (free PostgreSQL, no card required) — at the move, data is carried over via Drizzle migrations.
 - **Migration:** standard Next.js is not locked to any platform — the Docker image moves between Railway, Render, [Fly.io](http://Fly.io) or a VPS without rewriting (the door stays open).
 
@@ -436,6 +441,7 @@ There is no dedicated designer: the base look is shadcn/ui; branding is done thr
 - **Implementation:** the business colours are injected into the shadcn/ui theme CSS variables on load; components know nothing about specific colours.
 - Primary — buttons, active menu item, focus, selection. Accent — used sparingly: badges, secondary highlights, charts.
 - If no colours are set — a neutral system palette.
+- **Staged for now:** the mockup-driven redesign (see 3.5.1) bakes the current shop's two colours in as static theme tokens rather than loading them from `businesses` at runtime — `businesses.primary_color` / `accent_color` and the settings UI to change them don't exist yet (Stage 4, see 14). The dynamic, per-business version described above is what Stage 4 builds; until then the tokens are the current shop's fixed values.
 
 ### 13.2 Contrast and Derived Shades
 

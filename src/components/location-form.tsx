@@ -20,7 +20,10 @@ export function LocationForm() {
   );
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-3">
+    <form
+      action={formAction}
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4"
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">{t("nameLabel")}</Label>
         <Input id="name" name="name" required />
@@ -31,7 +34,7 @@ export function LocationForm() {
           id="type"
           name="type"
           defaultValue="shop"
-          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground"
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <option value="shop">{t("type.shop")}</option>
           <option value="warehouse">{t("type.warehouse")}</option>
