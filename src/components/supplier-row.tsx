@@ -19,11 +19,11 @@ const initialState: SupplierFormState = {};
 export function SupplierRow({
   supplier,
   selected,
-  onToggleSelected,
+  onToggleSelectedAction,
 }: {
   supplier: Supplier;
   selected: boolean;
-  onToggleSelected: () => void;
+  onToggleSelectedAction: () => void;
 }) {
   const t = useTranslations("suppliers");
   const { showToast } = useToast();
@@ -53,7 +53,7 @@ export function SupplierRow({
           <input
             type="checkbox"
             checked={selected}
-            onChange={onToggleSelected}
+            onChange={onToggleSelectedAction}
             aria-label={t("selectForBulkAction")}
             className="size-4 rounded border-input accent-primary"
           />

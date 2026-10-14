@@ -14,7 +14,7 @@ export function ErrorPanel({
   title,
   description,
   code,
-  onRetry,
+  onRetryAction,
   retryLabel,
   homeHref,
   homeLabel,
@@ -22,7 +22,7 @@ export function ErrorPanel({
   title: string;
   description: string;
   code?: string;
-  onRetry?: () => void;
+  onRetryAction?: () => void;
   retryLabel?: string;
   homeHref: string;
   homeLabel: string;
@@ -43,8 +43,8 @@ export function ErrorPanel({
           <LogoMark className="size-4" />
           {homeLabel}
         </Button>
-        {onRetry && (
-          <Button type="button" onClick={onRetry}>
+        {onRetryAction && (
+          <Button type="button" onClick={onRetryAction}>
             {retryLabel}
           </Button>
         )}

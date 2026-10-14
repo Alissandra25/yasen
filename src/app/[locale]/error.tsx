@@ -15,7 +15,6 @@ export default function RootError({
   const locale = useLocale();
 
   useEffect(() => {
-     
     console.error(error);
   }, [error]);
 
@@ -24,7 +23,7 @@ export default function RootError({
       title={t("title")}
       description={t("description")}
       code={error.digest ? t("code", { code: error.digest }) : undefined}
-      onRetry={reset}
+      onRetryAction={reset}
       retryLabel={t("retry")}
       homeHref={`/${locale}`}
       homeLabel={t("home")}

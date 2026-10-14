@@ -24,14 +24,14 @@ export function ProductRow({
   suppliers,
   isArchiveCandidate,
   selected,
-  onToggleSelected,
+  onToggleSelectedAction,
 }: {
   product: Product;
   categories: { id: number; label: string }[];
   suppliers: { id: number; name: string }[];
   isArchiveCandidate: boolean;
   selected: boolean;
-  onToggleSelected: () => void;
+  onToggleSelectedAction: () => void;
 }) {
   const t = useTranslations("products");
   const locale = useLocale();
@@ -66,7 +66,7 @@ export function ProductRow({
           <input
             type="checkbox"
             checked={selected}
-            onChange={onToggleSelected}
+            onChange={onToggleSelectedAction}
             aria-label={t("selectForBulkAction")}
             className="size-4 rounded border-input accent-primary"
           />

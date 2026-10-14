@@ -137,7 +137,7 @@ export function ProductList({
             suppliers={suppliers}
             isArchiveCandidate={candidateSet.has(product.id)}
             selected={selected.has(product.id)}
-            onToggleSelected={() => toggleSelected(product.id)}
+            onToggleSelectedAction={() => toggleSelected(product.id)}
           />
         ))}
         {visible.length === 0 && (

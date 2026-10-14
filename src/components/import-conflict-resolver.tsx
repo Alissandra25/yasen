@@ -15,10 +15,10 @@ const RESOLUTIONS: ImportResolution[] = ["merge", "overwrite", "keep"];
  */
 export function ImportConflictResolver({
   conflicts,
-  onSubmit,
+  onSubmitAction,
 }: {
   conflicts: { id: number; label: string }[];
-  onSubmit: (resolutions: Record<number, ImportResolution>) => Promise<void>;
+  onSubmitAction: (resolutions: Record<number, ImportResolution>) => Promise<void>;
 }) {
   const t = useTranslations("csvImport");
   const [resolutions, setResolutions] = useState<
@@ -39,7 +39,7 @@ export function ImportConflictResolver({
   }
 
   async function handleSubmit() {
-    await onSubmit(
+    await onSubmitAction(
       Object.fromEntries(
         conflicts.map((conflict) => [
           conflict.id,

@@ -8,6 +8,7 @@ import { ToastProvider } from "@/components/toast-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getCurrentBusiness } from "@/server/services/business";
 import "../globals.css";
+import React from "react";
 
 // UI typeface (spec 13.5 names it for the tagline; used across the whole app for consistency).
 // Named "--font-sans" to match the theme's `--font-sans: var(--font-sans)` mapping in globals.css.

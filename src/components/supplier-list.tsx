@@ -90,7 +90,7 @@ export function SupplierList({ suppliers }: { suppliers: Supplier[] }) {
             key={supplier.id}
             supplier={supplier}
             selected={selected.has(supplier.id)}
-            onToggleSelected={() => toggleSelected(supplier.id)}
+            onToggleSelectedAction={() => toggleSelected(supplier.id)}
           />
         ))}
         {visible.length === 0 && (

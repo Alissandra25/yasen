@@ -88,7 +88,7 @@ export function ProductCsvImport() {
             id: conflict.existingId,
             label: conflict.existingName,
           }))}
-          onSubmit={submitResolutions}
+          onSubmitAction={submitResolutions}
         />
       )}
     </div>
