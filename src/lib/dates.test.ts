@@ -9,7 +9,14 @@ import {
   daysBetween,
   daysInMonth,
   daysInWeek,
+  formatDateOnlyCompact,
+  formatDayLabel,
+  formatDayLabelFull,
+  formatDayShort,
   formatInBusinessTimeZone,
+  formatMonthLabel,
+  formatWeekdayShort,
+  formatWeekRangeLabel,
   monthStartDate,
   shiftMonth,
   shiftWeek,
@@ -170,5 +177,56 @@ describe("formatInBusinessTimeZone", () => {
       },
     );
     expect(formatted).toBe("09/10/2026");
+  });
+});
+
+describe("formatMonthLabel", () => {
+  it("capitalizes the month and drops Intl's year suffix", () => {
+    expect(formatMonthLabel("2026-10", "uk")).toBe("Жовтень 2026");
+    expect(formatMonthLabel("2026-10", "ru")).toBe("Октябрь 2026");
+    expect(formatMonthLabel("2026-10", "en")).toBe("October 2026");
+  });
+});
+
+describe("formatWeekRangeLabel", () => {
+  it("names the month once, in the genitive, for a week within one month", () => {
+    expect(formatWeekRangeLabel("2026-10-12", "uk")).toBe("12 – 18 жовтня");
+  });
+
+  it("names both months when the week spans a month boundary", () => {
+    expect(formatWeekRangeLabel("2026-09-28", "uk")).toBe(
+      "28 вересня – 4 жовтня",
+    );
+  });
+});
+
+describe("formatWeekdayShort", () => {
+  it("capitalizes the short weekday name", () => {
+    expect(formatWeekdayShort("2026-10-12", "uk")).toBe("Пн");
+  });
+});
+
+describe("formatDayLabel", () => {
+  it("combines the capitalized weekday with the genitive day/month, no year", () => {
+    expect(formatDayLabel("2026-10-12", "uk")).toBe("Пн, 12 жовтня");
+  });
+});
+
+describe("formatDayLabelFull", () => {
+  it("capitalizes the full weekday name, no year", () => {
+    expect(formatDayLabelFull("2026-10-11", "uk")).toBe("Неділя, 11 жовтня");
+  });
+});
+
+describe("formatDayShort", () => {
+  it("keeps the weekday lowercase, for use inline in a sentence", () => {
+    expect(formatDayShort("2026-10-12", "uk")).toBe("пн, 12 жовт");
+  });
+});
+
+describe("formatDateOnlyCompact", () => {
+  it("renders day, abbreviated month (no trailing dot) and year", () => {
+    expect(formatDateOnlyCompact("2026-10-14", "uk")).toBe("14 жовт 2026");
+    expect(formatDateOnlyCompact("2026-10-14", "en")).toBe("Oct 14, 2026");
   });
 });

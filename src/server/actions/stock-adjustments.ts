@@ -31,6 +31,7 @@ export async function adjustStockAction(
     locationId: Number(formData.get("locationId")),
     newQuantity: Number(formData.get("newQuantity")),
     reason: formData.get("reason"),
+    comment: formData.get("comment") || null,
   });
   if (!parsed.success) return { error: "invalid_input" };
 

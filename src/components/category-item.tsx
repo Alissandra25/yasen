@@ -1,36 +1,29 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { ChevronDown, GripVertical, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useToast } from "@/components/toast-provider";
-import {
-  archiveCategoryAction,
-  renameCategoryAction,
-  type CategoryFormState,
-} from "@/server/actions/categories";
-
-const initialState: CategoryFormState = {};
+import { cn } from "@/lib/utils";
 
 export function CategoryItem({
   category,
+  isTop,
+  selected,
+  onSelect,
+  collapsed,
+  onToggleCollapsed,
   children,
 }: {
   category: { id: number; name: string; productCount: number };
+  isTop?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
   children?: React.ReactNode;
 }) {
   const t = useTranslations("categories");
-  const { showToast } = useToast();
-  const [editing, setEditing] = useState(false);
   const {
     attributes,
     listeners,
@@ -39,19 +32,6 @@ export function CategoryItem({
     transition,
     isDragging,
   } = useSortable({ id: category.id });
-  const boundRename = renameCategoryAction.bind(null, category.id);
-  const [state, formAction, isPending] = useActionState(
-    boundRename,
-    initialState,
-  );
-
-  const wasPendingRef = useRef(false);
-  useEffect(() => {
-    if (wasPendingRef.current && !isPending && !state.error) {
-      setEditing(false);
-    }
-    wasPendingRef.current = isPending;
-  }, [isPending, state]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -62,77 +42,64 @@ export function CategoryItem({
     <li
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border border-border bg-card px-3 py-2 ${isDragging ? "opacity-50" : ""}`}
+      className={cn(
+        "group/item rounded-lg border px-2 py-1.5",
+        selected ? "border-primary bg-accent" : "border-border bg-card",
+        isDragging && "opacity-50",
+      )}
     >
-      <div className="flex items-center gap-3">
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <button
-                type="button"
-                aria-label={t("dragHandle")}
-                className="cursor-grab touch-none text-muted-foreground"
-                {...attributes}
-                {...listeners}
-              >
-                <GripVertical className="size-4" />
-              </button>
-            }
-          />
-          <TooltipContent>{t("dragHandle")}</TooltipContent>
-        </Tooltip>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-label={t("dragHandle")}
+          className="cursor-grab touch-none text-muted-foreground"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4" />
+        </button>
 
-        {!editing ? (
-          <span className="flex flex-1 items-center gap-2 text-sm text-foreground">
-            {category.name}
-            <span className="text-xs font-normal text-muted-foreground">
-              {t("itemCount", { count: category.productCount })}
-            </span>
-          </span>
-        ) : (
-          <form action={formAction} className="flex flex-1 items-center gap-2">
-            <Input
-              name="name"
-              defaultValue={category.name}
-              required
-              className="h-7"
+        {isTop && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-label={t("toggleCollapse")}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown
+              className={cn(
+                "size-3.5 transition-transform",
+                collapsed && "-rotate-90",
+              )}
             />
-            {state.error && (
-              <span className="text-xs text-destructive" role="alert">
-                {t("invalidInput")}
-              </span>
-            )}
-            <Button type="submit" size="xs" disabled={isPending}>
-              {t("save")}
-            </Button>
-          </form>
+          </button>
         )}
 
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="xs"
-            onClick={() => setEditing((value) => !value)}
-          >
-            {editing ? t("cancel") : t("rename")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="xs"
-            onClick={() => {
-              void archiveCategoryAction(category.id);
-              showToast({
-                message: t("archivedToast", { name: category.name }),
-              });
-            }}
-          >
-            {t("archive")}
-          </Button>
-        </div>
+        <button
+          type="button"
+          onClick={onSelect}
+          className={cn(
+            "flex flex-1 items-center gap-2 text-left text-sm text-foreground",
+            isTop && "font-semibold",
+          )}
+        >
+          {category.name}
+          <span className="text-xs font-normal text-muted-foreground">
+            {t("itemCount", { count: category.productCount })}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onSelect}
+          aria-label={t("editCategory")}
+          className="text-muted-foreground opacity-0 hover:text-foreground group-hover/item:opacity-100"
+        >
+          <Pencil className="size-3.5" />
+        </button>
       </div>
-      {children}
+      {!collapsed && children}
     </li>
   );
 }

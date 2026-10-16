@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,9 @@ export function ChangePasswordForm() {
     changePasswordAction,
     initialState,
   );
+  const [newPassword, setNewPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const mismatch = repeatPassword.length > 0 && newPassword !== repeatPassword;
 
   return (
     <form action={formAction} className="flex max-w-sm flex-col gap-4">
@@ -40,7 +43,26 @@ export function ChangePasswordForm() {
           autoComplete="new-password"
           minLength={8}
           required
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
         />
+        <p className="text-xs text-muted-foreground">{t("passwordHint")}</p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="repeatPassword">{t("repeatPasswordLabel")}</Label>
+        {/* Client-side only: not submitted, just confirms the two fields agree before the
+            request goes out. */}
+        <Input
+          id="repeatPassword"
+          type="password"
+          autoComplete="new-password"
+          value={repeatPassword}
+          onChange={(event) => setRepeatPassword(event.target.value)}
+          aria-invalid={mismatch}
+        />
+        {mismatch && (
+          <p className="text-xs text-destructive">{t("passwordMismatch")}</p>
+        )}
       </div>
       {state.error && (
         <p className="text-sm text-destructive" role="alert">
@@ -54,7 +76,7 @@ export function ChangePasswordForm() {
           {t("success")}
         </p>
       )}
-      <Button type="submit" disabled={isPending}>
+      <Button type="submit" disabled={isPending || mismatch} className="w-fit">
         {t("submit")}
       </Button>
     </form>

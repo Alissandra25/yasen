@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LogoMark } from "@/components/logo-mark";
 
@@ -29,7 +28,7 @@ export function ErrorPanel({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-24 text-center">
-      <AlertTriangle className="size-10 text-muted-foreground" />
+      <LogoMark className="size-10" />
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-bold text-foreground">{title}</h1>
         <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
@@ -40,7 +39,6 @@ export function ErrorPanel({
           nativeButton={false}
           render={<Link href={homeHref} />}
         >
-          <LogoMark className="size-4" />
           {homeLabel}
         </Button>
         {onRetryAction && (

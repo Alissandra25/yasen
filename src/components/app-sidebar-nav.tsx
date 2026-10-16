@@ -23,7 +23,6 @@ import { LocationSwitcher } from "@/components/location-switcher";
 import { LogoMark } from "@/components/logo-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import { logoutAction } from "@/server/actions/auth";
 
 interface NavItem {
   key: string;
@@ -72,9 +71,9 @@ export function AppSidebarNav({
   locale,
   brandName,
   dailyLabel,
+  accountingLabel,
   referencesLabel,
   settingsLabel,
-  logoutLabel,
   closeMenuLabel,
   salesLabel,
   receiptsLabel,
@@ -94,9 +93,9 @@ export function AppSidebarNav({
   locale: string;
   brandName: string;
   dailyLabel: string;
+  accountingLabel: string;
   referencesLabel: string;
   settingsLabel: string;
-  logoutLabel: string;
   closeMenuLabel: string;
   salesLabel: string;
   receiptsLabel: string;
@@ -226,11 +225,16 @@ export function AppSidebarNav({
           ))}
         </div>
 
-        <NavLink
-          item={stockItem}
-          active={isActive(stockItem.href)}
-          onNavigate={closeMenu}
-        />
+        <div className="flex flex-col gap-1">
+          <span className="px-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {accountingLabel}
+          </span>
+          <NavLink
+            item={stockItem}
+            active={isActive(stockItem.href)}
+            onNavigate={closeMenu}
+          />
+        </div>
 
         <div className="flex flex-col gap-1">
           <span className="px-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
@@ -268,16 +272,6 @@ export function AppSidebarNav({
           <LocaleSwitcher compact />
           <ThemeToggle />
         </div>
-        <form action={logoutAction.bind(null, locale)} className="px-1 pt-1">
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start"
-          >
-            {logoutLabel}
-          </Button>
-        </form>
       </div>
     </div>
   );

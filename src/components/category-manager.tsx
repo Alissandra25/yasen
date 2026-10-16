@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import { Search } from "lucide-react";
 import {
   DndContext,
   KeyboardSensor,
@@ -18,6 +20,10 @@ import {
 } from "@dnd-kit/sortable";
 import { reorderCategoriesAction } from "@/server/actions/categories";
 import { CategoryCreateForm } from "@/components/category-create-form";
+import {
+  CategoryDetailPanel,
+  type FlatCategory,
+} from "@/components/category-detail-panel";
 import { CategoryItem } from "@/components/category-item";
 
 export interface CategoryNode {
@@ -80,13 +86,23 @@ function SortableList<T extends { id: number }>({
   );
 }
 
+function normalize(value: string) {
+  return value.trim().toLowerCase();
+}
+
 export function CategoryManager({
   initialCategories,
+  flatCategories,
 }: {
   initialCategories: CategoryNode[];
+  flatCategories: FlatCategory[];
 }) {
+  const t = useTranslations("categories");
   const [categories, setCategories] = useState(initialCategories);
   const [syncedInitial, setSyncedInitial] = useState(initialCategories);
+  const [search, setSearch] = useState("");
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // useState's initial value is only used on mount; after a create/rename/archive action calls
   // revalidatePath, the server re-renders this page and pushes a fresh initialCategories prop
@@ -112,29 +128,115 @@ export function CategoryManager({
     );
   }
 
+  function toggleCollapsed(categoryId: number) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  }
+
+  const searchQuery = normalize(search);
+  const visibleCategories = searchQuery
+    ? categories.filter(
+        (category) =>
+          normalize(category.name).includes(searchQuery) ||
+          category.subcategories.some((sub) =>
+            normalize(sub.name).includes(searchQuery),
+          ),
+      )
+    : categories;
+
+  const allTopIds = useMemo(
+    () => categories.map((category) => category.id),
+    [categories],
+  );
+
+  const selectedCategory = selectedId
+    ? (flatCategories.find((c) => c.id === selectedId) ?? null)
+    : null;
+
   return (
-    <div className="flex flex-col gap-6">
-      <SortableList
-        parentId={null}
-        items={categories}
-        onReorder={setCategories}
-        renderItem={(category) => (
-          <CategoryItem key={category.id} category={category}>
-            <div className="mt-2 ml-6 flex flex-col gap-2">
-              <SortableList
-                parentId={category.id}
-                items={category.subcategories}
-                onReorder={(next) => reorderSubcategories(category.id, next)}
-                renderItem={(sub) => (
-                  <CategoryItem key={sub.id} category={sub} />
-                )}
-              />
-              <CategoryCreateForm parentId={category.id} />
-            </div>
-          </CategoryItem>
-        )}
-      />
-      <CategoryCreateForm parentId={null} />
+    <div className="flex gap-6">
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative max-w-xs flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="h-8 w-full rounded-lg border border-input bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setCollapsed(new Set())}
+            className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {t("expandAll")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCollapsed(new Set(allTopIds))}
+            className="text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {t("collapseAll")}
+          </button>
+        </div>
+
+        <SortableList
+          parentId={null}
+          items={visibleCategories}
+          onReorder={setCategories}
+          renderItem={(category) => (
+            <CategoryItem
+              key={category.id}
+              category={category}
+              isTop
+              selected={selectedId === category.id}
+              onSelect={() => setSelectedId(category.id)}
+              collapsed={collapsed.has(category.id)}
+              onToggleCollapsed={() => toggleCollapsed(category.id)}
+            >
+              <div className="mt-2 ml-6 flex flex-col gap-2">
+                <SortableList
+                  parentId={category.id}
+                  items={category.subcategories}
+                  onReorder={(next) => reorderSubcategories(category.id, next)}
+                  renderItem={(sub) => (
+                    <CategoryItem
+                      key={sub.id}
+                      category={sub}
+                      selected={selectedId === sub.id}
+                      onSelect={() => setSelectedId(sub.id)}
+                    />
+                  )}
+                />
+                <CategoryCreateForm
+                  parentId={category.id}
+                  parentName={category.name}
+                />
+              </div>
+            </CategoryItem>
+          )}
+        />
+        <CategoryCreateForm parentId={null} />
+        <p className="text-xs text-muted-foreground">{t("keyboardHint")}</p>
+      </div>
+
+      {selectedCategory ? (
+        <CategoryDetailPanel
+          key={selectedCategory.id}
+          category={selectedCategory}
+          flatCategories={flatCategories}
+        />
+      ) : (
+        <div className="flex w-80 shrink-0 items-start justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          {t("selectPrompt")}
+        </div>
+      )}
     </div>
   );
 }

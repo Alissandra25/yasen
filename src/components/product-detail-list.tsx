@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
+import { ProductCreateDialog } from "@/components/product-create-dialog";
 import { cn } from "@/lib/utils";
 
 interface ListedProduct {
@@ -16,10 +17,14 @@ export function ProductDetailList({
   products,
   selectedId,
   locale,
+  categories,
+  suppliers,
 }: {
   products: ListedProduct[];
   selectedId: number;
   locale: string;
+  categories: { id: number; label: string }[];
+  suppliers: { id: number; name: string }[];
 }) {
   const t = useTranslations("products");
   const [query, setQuery] = useState("");
@@ -36,6 +41,10 @@ export function ProductDetailList({
 
   return (
     <div className="flex w-72 shrink-0 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
+        <ProductCreateDialog categories={categories} suppliers={suppliers} />
+      </div>
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <input

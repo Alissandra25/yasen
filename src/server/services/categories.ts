@@ -117,6 +117,76 @@ export async function archiveCategory(
   return { ok: true, category };
 }
 
+export type MoveCategoryResult =
+  | { ok: true; category: typeof categoriesTable.$inferSelect }
+  | { ok: false; reason: "not_found" | "invalid_target" };
+
+/**
+ * Re-parents a subcategory to a different top-level category (the detail panel's "Belongs to
+ * category" select). Only ever moves a subcategory — a top-level category never gets a parent
+ * through this, and the target must itself be an existing top-level category.
+ */
+export async function moveCategoryParent(
+  db: WritableDbOrTx,
+  businessId: number,
+  categoryId: number,
+  newParentId: number,
+): Promise<MoveCategoryResult> {
+  const [current] = await db
+    .select()
+    .from(categoriesTable)
+    .where(
+      and(
+        eq(categoriesTable.id, categoryId),
+        eq(categoriesTable.businessId, businessId),
+      ),
+    );
+  if (!current || current.parentId === null) {
+    return { ok: false, reason: "not_found" };
+  }
+
+  const [target] = await db
+    .select()
+    .from(categoriesTable)
+    .where(
+      and(
+        eq(categoriesTable.id, newParentId),
+        eq(categoriesTable.businessId, businessId),
+        isNull(categoriesTable.parentId),
+      ),
+    );
+  if (!target) {
+    return { ok: false, reason: "invalid_target" };
+  }
+
+  const siblings = await db
+    .select({ sortOrder: categoriesTable.sortOrder })
+    .from(categoriesTable)
+    .where(
+      and(
+        eq(categoriesTable.businessId, businessId),
+        parentFilter(newParentId),
+      ),
+    );
+  const nextSortOrder =
+    siblings.length === 0
+      ? 0
+      : Math.max(...siblings.map((s) => s.sortOrder)) + 1;
+
+  const [category] = await db
+    .update(categoriesTable)
+    .set({ parentId: newParentId, sortOrder: nextSortOrder })
+    .where(
+      and(
+        eq(categoriesTable.id, categoryId),
+        eq(categoriesTable.businessId, businessId),
+      ),
+    )
+    .returning();
+
+  return { ok: true, category };
+}
+
 export type ReorderResult = { ok: true } | { ok: false; reason: "invalid_ids" };
 
 /**

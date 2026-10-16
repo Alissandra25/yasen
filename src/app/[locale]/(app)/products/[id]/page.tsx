@@ -20,7 +20,7 @@ function categoryBreadcrumb(
   if (!category) return "";
   if (category.parentId === null) return category.name;
   const parent = categories.find((c) => c.id === category.parentId);
-  return parent ? `${parent.name} > ${category.name}` : category.name;
+  return parent ? `${parent.name} › ${category.name}` : category.name;
 }
 
 export default async function ProductDetailPage({
@@ -58,29 +58,35 @@ export default async function ProductDetailPage({
     .map((row) => ({
       locationId: row.locationId,
       locationName: row.locationName,
+      locationType: row.locationType,
       quantity: row.quantity,
     }));
 
+  const categoryOptions = categories
+    .filter((c) => !c.archived)
+    .map((c) => ({ id: c.id, label: c.name }));
+  const supplierOptions = suppliers
+    .filter((s) => !s.archived && !s.isSystem)
+    .map((s) => ({ id: s.id, name: s.name }));
+
   return (
-    <div className="flex max-w-5xl gap-6 px-6 py-8">
+    <div className="flex gap-6 px-6 py-8">
       <ProductDetailList
         products={products
           .filter((p) => !p.archived)
           .map((p) => ({ id: p.id, name: p.name, sku: p.sku }))}
         selectedId={productId}
         locale={locale}
+        categories={categoryOptions}
+        suppliers={supplierOptions}
       />
       <div className="flex-1">
         <h1 className="sr-only">{t("title")}</h1>
         <ProductDetailPanel
           product={product}
           breadcrumb={categoryBreadcrumb(product.categoryId, categories)}
-          categories={categories
-            .filter((c) => !c.archived)
-            .map((c) => ({ id: c.id, label: c.name }))}
-          suppliers={suppliers
-            .filter((s) => !s.archived && !s.isSystem)
-            .map((s) => ({ id: s.id, name: s.name }))}
+          categories={categoryOptions}
+          suppliers={supplierOptions}
           stockByLocation={stockByLocation}
           priceHistory={priceHistory}
           noteMonth={noteMonth}

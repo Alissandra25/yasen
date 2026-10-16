@@ -12,6 +12,7 @@ export interface InventoryRow {
   minStock: number;
   locationId: number;
   locationName: string;
+  locationType: "warehouse" | "shop";
   quantity: number;
   lastMovementAt: Date | null;
 }
@@ -32,6 +33,7 @@ export async function listInventory(
       minStock: productsTable.minStock,
       locationId: inventoryTable.locationId,
       locationName: locationsTable.name,
+      locationType: locationsTable.type,
       quantity: inventoryTable.quantity,
       lastMovementAt: inventoryTable.lastMovementAt,
     })

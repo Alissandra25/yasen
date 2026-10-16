@@ -1,8 +1,11 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import type { getDb } from "@/db/client";
+import { getDb } from "@/db/client";
 import { inventoryTable } from "@/db/schema/inventory";
+import { locationsTable } from "@/db/schema/locations";
+import { productsTable } from "@/db/schema/products";
 import { stockAdjustmentsTable } from "@/db/schema/stock-adjustments";
+import { usersTable } from "@/db/schema/users";
 
 type WritableDbOrTx = Pick<
   ReturnType<typeof getDb>,
@@ -17,7 +20,8 @@ export const stockAdjustmentInputSchema = z.object({
   // Aligns stock to the actual counted/known value (spec 4.1) — any integer, since stock is
   // already allowed to be negative elsewhere (spec 4.1) and a correction may target that too.
   newQuantity: z.number().int(),
-  reason: z.enum(["breakage", "shortage", "mis_sort", "other"]),
+  reason: z.enum(["breakage", "shortage", "mis_sort", "count_error", "other"]),
+  comment: z.string().trim().max(500).nullable().optional(),
   // Set only when this adjustment is one line of a posted stocktake (spec 11); null for a
   // manual single-item adjustment made from the stock page.
   stocktakeId: z.number().int().positive().nullable().optional(),
@@ -58,6 +62,7 @@ export async function adjustStock(
       oldQuantity: inventoryRow.quantity,
       newQuantity: input.newQuantity,
       reason: input.reason,
+      comment: input.comment || null,
       adjustedBy: userId,
       stocktakeId: input.stocktakeId ?? null,
     })
@@ -74,4 +79,50 @@ export async function adjustStock(
     );
 
   return { ok: true, adjustment };
+}
+
+export interface StockAdjustmentRow {
+  id: number;
+  productName: string;
+  sku: string | null;
+  locationName: string;
+  locationType: "warehouse" | "shop";
+  oldQuantity: number;
+  newQuantity: number;
+  reason: "breakage" | "shortage" | "mis_sort" | "count_error" | "other";
+  comment: string | null;
+  adjustedByEmail: string;
+  adjustedAt: Date;
+}
+
+/** Read-only correction history (spec mockup 20's "Історія коригувань") — manual adjustments only, newest first. */
+export async function listStockAdjustments(
+  businessId: number,
+): Promise<StockAdjustmentRow[]> {
+  return getDb()
+    .select({
+      id: stockAdjustmentsTable.id,
+      productName: productsTable.name,
+      sku: productsTable.sku,
+      locationName: locationsTable.name,
+      locationType: locationsTable.type,
+      oldQuantity: stockAdjustmentsTable.oldQuantity,
+      newQuantity: stockAdjustmentsTable.newQuantity,
+      reason: stockAdjustmentsTable.reason,
+      comment: stockAdjustmentsTable.comment,
+      adjustedByEmail: usersTable.email,
+      adjustedAt: stockAdjustmentsTable.adjustedAt,
+    })
+    .from(stockAdjustmentsTable)
+    .innerJoin(
+      productsTable,
+      eq(productsTable.id, stockAdjustmentsTable.productId),
+    )
+    .innerJoin(
+      locationsTable,
+      eq(locationsTable.id, stockAdjustmentsTable.locationId),
+    )
+    .innerJoin(usersTable, eq(usersTable.id, stockAdjustmentsTable.adjustedBy))
+    .where(eq(productsTable.businessId, businessId))
+    .orderBy(desc(stockAdjustmentsTable.adjustedAt));
 }

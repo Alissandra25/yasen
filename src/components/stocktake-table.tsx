@@ -12,7 +12,7 @@ import {
 } from "@/server/actions/stocktakes";
 import type { StocktakeItemRow } from "@/server/services/stocktakes";
 
-type Reason = "breakage" | "shortage" | "mis_sort" | "other";
+type Reason = "breakage" | "shortage" | "mis_sort" | "count_error" | "other";
 type StatusFilter = "all" | "uncounted" | "discrepancies";
 
 function difference(item: StocktakeItemRow): number | null {
@@ -274,6 +274,9 @@ export function StocktakeTable({
                         <option value="breakage">{t("reason.breakage")}</option>
                         <option value="shortage">{t("reason.shortage")}</option>
                         <option value="mis_sort">{t("reason.mis_sort")}</option>
+                        <option value="count_error">
+                          {t("reason.count_error")}
+                        </option>
                         <option value="other">{t("reason.other")}</option>
                       </select>
                     )}
@@ -295,7 +298,7 @@ export function StocktakeTable({
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+      <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-[0_-2px_8px_rgba(0,0,0,0.04)]">
         <p className="text-sm text-muted-foreground">
           {t("summary", {
             count: discrepancyItems.length,

@@ -29,5 +29,5 @@ credentials (see below) — they don't block using the MVP.
 
 2. **Offline** sales matrix (Service Worker + IndexedDB queue + sync).
 3. **Control:** stocktakes + PDF act, customer returns + supplier replacements, restock lists, corrections of posted documents + period closing, export (PDF/Excel), monthly report.
-4. **Analytics & settings:** dashboard, profitability, discrepancy analytics, brand colours + logo upload, archive/needs-review filters, optional supplier tracking.
+4. **Analytics & settings:** dashboard, profitability, discrepancy analytics, brand colours + logo upload, archive/needs-review filters, optional supplier tracking, configurable payment methods (reorder/add/rename — cash and card are hardcoded until then; confirmed with the owner during the redesign QA pass).
 5. **Maturity:** Docker, GitHub Actions CI/CD, move to Railway, Railway backups + restore drill.

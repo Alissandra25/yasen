@@ -12,6 +12,15 @@ const LOCALE_NAMES: Record<(typeof routing.locales)[number], string> = {
   ru: "Русский",
 };
 
+// Short codes for the compact sidebar switcher. Ukrainian's ISO 639-1 code ("uk") reads as
+// English "UK" (United Kingdom) in a 2-letter badge, so the mockups use the country-style "UA"
+// there instead of the language code.
+const LOCALE_SHORT_CODES: Record<(typeof routing.locales)[number], string> = {
+  en: "EN",
+  uk: "UA",
+  ru: "RU",
+};
+
 export function LocaleSwitcher({
   compact = false,
   segmented = false,
@@ -63,13 +72,13 @@ export function LocaleSwitcher({
     return (
       <select
         aria-label={t("switchLabel")}
-        className="h-8 shrink-0 rounded-lg border border-border bg-background px-1.5 text-xs font-medium text-foreground uppercase"
+        className="h-8 shrink-0 rounded-lg border border-border bg-background px-1.5 text-xs font-medium text-foreground"
         value={locale}
         onChange={(event) => changeLocale(event.target.value)}
       >
         {routing.locales.map((loc) => (
           <option key={loc} value={loc}>
-            {loc}
+            {LOCALE_SHORT_CODES[loc]}
           </option>
         ))}
       </select>

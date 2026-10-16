@@ -11,10 +11,12 @@ import { recordAuditEntry } from "@/server/audit";
 import {
   applyProductImportResolution,
   archiveProduct,
+  bulkSetCategory,
   confirmProductsReviewed,
   createProduct,
   importProductsFromRows,
   productFieldsSchema,
+  reassignCategoryProducts,
   updateProduct,
   type ProductCsvRow,
   type ProductImportResolution,
@@ -194,6 +196,90 @@ export async function confirmProductsReviewedAction(
   });
 
   revalidatePath(PRODUCTS_PAGE, "page");
+  return { ok: true };
+}
+
+const bulkSetCategoryInputSchema = z.object({
+  productIds: z.array(z.number().int().positive()).min(1),
+  categoryId: z.number().int().positive(),
+});
+
+export async function bulkSetCategoryAction(
+  productIds: number[],
+  categoryId: number,
+): Promise<{ ok: boolean }> {
+  const user = await requireOwner();
+
+  const parsed = bulkSetCategoryInputSchema.safeParse({
+    productIds,
+    categoryId,
+  });
+  if (!parsed.success) return { ok: false };
+
+  const db = getDb();
+  await db.transaction(async (tx) => {
+    await bulkSetCategory(
+      tx,
+      user.businessId,
+      parsed.data.productIds,
+      parsed.data.categoryId,
+    );
+    await recordAuditEntry(tx, {
+      businessId: user.businessId,
+      userId: user.id,
+      actionType: "product.bulk_set_category",
+      entityType: "product",
+      newValue: {
+        productIds: parsed.data.productIds,
+        categoryId: parsed.data.categoryId,
+      },
+    });
+  });
+
+  revalidatePath(PRODUCTS_PAGE, "page");
+  return { ok: true };
+}
+
+const reassignCategoryProductsInputSchema = z.object({
+  fromCategoryId: z.number().int().positive(),
+  toCategoryId: z.number().int().positive(),
+});
+
+/** Categories panel's "move all products to another (sub)category" action. */
+export async function reassignCategoryProductsAction(
+  fromCategoryId: number,
+  toCategoryId: number,
+): Promise<{ ok: boolean }> {
+  const user = await requireOwner();
+
+  const parsed = reassignCategoryProductsInputSchema.safeParse({
+    fromCategoryId,
+    toCategoryId,
+  });
+  if (!parsed.success) return { ok: false };
+
+  const db = getDb();
+  await db.transaction(async (tx) => {
+    await reassignCategoryProducts(
+      tx,
+      user.businessId,
+      parsed.data.fromCategoryId,
+      parsed.data.toCategoryId,
+    );
+    await recordAuditEntry(tx, {
+      businessId: user.businessId,
+      userId: user.id,
+      actionType: "product.reassign_category",
+      entityType: "product",
+      newValue: {
+        fromCategoryId: parsed.data.fromCategoryId,
+        toCategoryId: parsed.data.toCategoryId,
+      },
+    });
+  });
+
+  revalidatePath(PRODUCTS_PAGE, "page");
+  revalidatePath("/[locale]/(app)/categories", "page");
   return { ok: true };
 }
 

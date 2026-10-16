@@ -53,7 +53,7 @@ export default async function StocktakePage({
   const location = locations.find((l) => l.id === stocktake.locationId);
 
   return (
-    <div className="flex max-w-5xl flex-col gap-6 px-6 py-8">
+    <div className="flex flex-col gap-6 px-6 py-8">
       <div className="flex items-start justify-between gap-3">
         <div>
           <Link
@@ -77,7 +77,7 @@ export default async function StocktakePage({
           className={buttonVariants({ variant: "outline", size: "sm" })}
         >
           <FileDown className="size-4" />
-          {t("exportPdf")}
+          {stocktake.status === "posted" ? t("exportPdf") : t("exportPdfDraft")}
         </a>
       </div>
       <StocktakeTable

@@ -2,13 +2,16 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
+  PopoverClose,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { LocationDot } from "@/components/location-dot";
 import { cn } from "@/lib/utils";
 import {
   adjustStockAction,
@@ -16,29 +19,39 @@ import {
 } from "@/server/actions/stock-adjustments";
 
 const initialState: StockAdjustmentFormState = {};
-const REASONS = ["breakage", "shortage", "mis_sort", "other"] as const;
+const REASONS = [
+  "mis_sort",
+  "shortage",
+  "breakage",
+  "count_error",
+  "other",
+] as const;
 
 /**
- * One location's quantity for one product, shown as a clickable cell that opens the adjustment
- * popover (spec 4.1) — reused across every location column in the pivoted stock table.
+ * One pencil icon per product row (spec mockup 19), opening a popover with a tab per location —
+ * replaces the old per-cell invisible-button pattern (every number was its own clickable
+ * target, which read as noise).
  */
-export function StockAdjustCell({
+export function StockAdjustPopover({
   productId,
   productName,
-  locationId,
-  locationName,
-  quantity,
+  locations,
 }: {
   productId: number;
   productName: string;
-  locationId: number;
-  locationName: string;
-  quantity: number;
+  locations: {
+    id: number;
+    name: string;
+    type: "warehouse" | "shop";
+    quantity: number;
+  }[];
 }) {
   const t = useTranslations("stock");
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState<(typeof REASONS)[number]>("other");
-  const [newQuantity, setNewQuantity] = useState(String(quantity));
+  const [locationId, setLocationId] = useState(locations[0]?.id ?? 0);
+  const [reason, setReason] = useState<(typeof REASONS)[number] | null>(null);
+  const [newQuantity, setNewQuantity] = useState("");
+  const [comment, setComment] = useState("");
   const [state, formAction, isPending] = useActionState(
     adjustStockAction,
     initialState,
@@ -52,48 +65,83 @@ export function StockAdjustCell({
     wasPendingRef.current = isPending;
   }, [isPending, state]);
 
+  const currentLocation = locations.find((l) => l.id === locationId);
+  const quantity = currentLocation?.quantity ?? 0;
   const parsedNewQuantity = Number.parseInt(newQuantity, 10);
   const difference = Number.isFinite(parsedNewQuantity)
     ? parsedNewQuantity - quantity
     : null;
+
+  function resetForLocation(nextLocationId: number) {
+    setLocationId(nextLocationId);
+    const found = locations.find((l) => l.id === nextLocationId);
+    setNewQuantity(String(found?.quantity ?? 0));
+    setReason(null);
+    setComment("");
+  }
 
   return (
     <Popover
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) setNewQuantity(String(quantity));
+        if (next) resetForLocation(locations[0]?.id ?? 0);
       }}
     >
       <PopoverTrigger
         render={
           <button
             type="button"
-            aria-label={`${t("adjust")}: ${productName}, ${locationName}`}
-            className={cn(
-              "w-full rounded-md px-2 py-1 text-right hover:bg-muted",
-              quantity < 0
-                ? "font-semibold text-destructive"
-                : quantity === 0
-                  ? "text-muted-foreground"
-                  : "text-foreground",
-            )}
+            aria-label={`${t("adjust")}: ${productName}`}
+            className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            {quantity}
+            <Pencil className="size-3.5" />
           </button>
         }
       />
-      <PopoverContent align="end" className="w-80 p-4">
+      <PopoverContent align="end" className="w-96 p-4">
         <form action={formAction} className="flex flex-col gap-4">
-          <div>
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              {t("adjust")}
-            </p>
-            <p className="font-semibold text-foreground">{productName}</p>
-            <p className="text-xs text-muted-foreground">{locationName}</p>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                {t("adjust")}
+              </p>
+              <p className="font-semibold text-foreground">{productName}</p>
+            </div>
+            <PopoverClose
+              aria-label={t("cancel")}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-4" />
+            </PopoverClose>
           </div>
+
           <input type="hidden" name="productId" value={productId} />
           <input type="hidden" name="locationId" value={locationId} />
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted-foreground">
+              {t("whereLabel")}
+            </span>
+            <div className="inline-flex items-center gap-1 rounded-lg bg-muted p-1">
+              {locations.map((location) => (
+                <button
+                  key={location.id}
+                  type="button"
+                  onClick={() => resetForLocation(location.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+                    locationId === location.id
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <LocationDot type={location.type} />
+                  {location.name} · {location.quantity}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="grid grid-cols-3 items-end gap-3">
             <div className="flex flex-col gap-1">
@@ -111,13 +159,13 @@ export function StockAdjustCell({
             </div>
             <div className="flex flex-col gap-1">
               <label
-                htmlFor={`new-quantity-${productId}-${locationId}`}
+                htmlFor={`new-quantity-${productId}`}
                 className="text-xs text-muted-foreground"
               >
                 {t("newQuantityLabel")}
               </label>
               <Input
-                id={`new-quantity-${productId}-${locationId}`}
+                id={`new-quantity-${productId}`}
                 name="newQuantity"
                 className="text-center text-lg font-bold"
                 value={newQuantity}
@@ -169,7 +217,22 @@ export function StockAdjustCell({
                 </button>
               ))}
             </div>
-            <input type="hidden" name="reason" value={reason} />
+            <input type="hidden" name="reason" value={reason ?? ""} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor={`comment-${productId}`}
+              className="text-xs text-muted-foreground"
+            >
+              {t("commentLabel")}
+            </label>
+            <Input
+              id={`comment-${productId}`}
+              name="comment"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
           </div>
 
           {state.error && (
@@ -178,10 +241,7 @@ export function StockAdjustCell({
             </p>
           )}
 
-          <div className="flex items-center gap-2">
-            <Button type="submit" size="sm" disabled={isPending}>
-              {t("save")}
-            </Button>
+          <div className="flex items-center justify-between gap-2">
             <Button
               type="button"
               variant="outline"
@@ -189,6 +249,9 @@ export function StockAdjustCell({
               onClick={() => setOpen(false)}
             >
               {t("cancel")}
+            </Button>
+            <Button type="submit" size="sm" disabled={isPending || !reason}>
+              {t("save")}
             </Button>
           </div>
         </form>

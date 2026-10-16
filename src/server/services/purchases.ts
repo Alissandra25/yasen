@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { inventoryTable } from "@/db/schema/inventory";
@@ -236,6 +236,7 @@ export async function getPurchaseWithItems(
       sku: productsTable.sku,
       locationId: purchaseItemsTable.locationId,
       locationName: locationsTable.name,
+      locationType: locationsTable.type,
       quantity: purchaseItemsTable.quantity,
       purchasePrice: purchaseItemsTable.purchasePrice,
       salePrice: purchaseItemsTable.salePrice,
@@ -249,7 +250,8 @@ export async function getPurchaseWithItems(
       locationsTable,
       eq(locationsTable.id, purchaseItemsTable.locationId),
     )
-    .where(eq(purchaseItemsTable.purchaseId, purchaseId));
+    .where(eq(purchaseItemsTable.purchaseId, purchaseId))
+    .orderBy(asc(purchaseItemsTable.id));
 
   return { purchase, items };
 }
@@ -259,10 +261,11 @@ export interface PurchaseSummary {
   createdAt: Date;
   supplierId: number;
   supplierName: string;
+  supplierNeedsReview: boolean;
   defaultLocationId: number;
   lineCount: number;
   totalAmount: number;
-  locationNames: string[];
+  locations: { id: number; name: string; type: "warehouse" | "shop" }[];
 }
 
 /** Read-only summary for the receipts list page: one row per receipt with its line/money totals. */
@@ -276,6 +279,7 @@ export async function listPurchasesWithSummary(
       createdAt: purchasesTable.createdAt,
       supplierId: purchasesTable.supplierId,
       supplierName: suppliersTable.name,
+      supplierNeedsReview: suppliersTable.needsReview,
       defaultLocationId: purchasesTable.defaultLocationId,
     })
     .from(purchasesTable)
@@ -290,6 +294,7 @@ export async function listPurchasesWithSummary(
       purchasePrice: purchaseItemsTable.purchasePrice,
       locationId: purchaseItemsTable.locationId,
       locationName: locationsTable.name,
+      locationType: locationsTable.type,
     })
     .from(purchaseItemsTable)
     .innerJoin(
@@ -304,17 +309,31 @@ export async function listPurchasesWithSummary(
 
   const aggregates = new Map<
     number,
-    { lineCount: number; totalAmount: number; locations: Map<number, string> }
+    {
+      lineCount: number;
+      totalAmount: number;
+      locations: Map<
+        number,
+        { id: number; name: string; type: "warehouse" | "shop" }
+      >;
+    }
   >();
   for (const item of items) {
     const existing = aggregates.get(item.purchaseId) ?? {
       lineCount: 0,
       totalAmount: 0,
-      locations: new Map<number, string>(),
+      locations: new Map<
+        number,
+        { id: number; name: string; type: "warehouse" | "shop" }
+      >(),
     };
     existing.lineCount += 1;
     existing.totalAmount += item.quantity * item.purchasePrice;
-    existing.locations.set(item.locationId, item.locationName);
+    existing.locations.set(item.locationId, {
+      id: item.locationId,
+      name: item.locationName,
+      type: item.locationType,
+    });
     aggregates.set(item.purchaseId, existing);
   }
 
@@ -324,7 +343,7 @@ export async function listPurchasesWithSummary(
       ...purchase,
       lineCount: aggregate?.lineCount ?? 0,
       totalAmount: aggregate?.totalAmount ?? 0,
-      locationNames: aggregate ? Array.from(aggregate.locations.values()) : [],
+      locations: aggregate ? Array.from(aggregate.locations.values()) : [],
     };
   });
 }

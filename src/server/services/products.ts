@@ -151,6 +151,43 @@ export async function updateProduct(
   return { ok: true, product };
 }
 
+/** Bulk "Змінити категорію" action (spec mockup 11) — category only, nothing else touched. */
+export async function bulkSetCategory(
+  db: WritableDbOrTx,
+  businessId: number,
+  productIds: number[],
+  categoryId: number,
+): Promise<void> {
+  await db
+    .update(productsTable)
+    .set({ categoryId })
+    .where(
+      and(
+        eq(productsTable.businessId, businessId),
+        inArray(productsTable.id, productIds),
+      ),
+    );
+}
+
+/** Moves every non-archived product out of one category into another (categories panel's "move all products" action). */
+export async function reassignCategoryProducts(
+  db: WritableDbOrTx,
+  businessId: number,
+  fromCategoryId: number,
+  toCategoryId: number,
+): Promise<void> {
+  await db
+    .update(productsTable)
+    .set({ categoryId: toCategoryId })
+    .where(
+      and(
+        eq(productsTable.businessId, businessId),
+        eq(productsTable.categoryId, fromCategoryId),
+        eq(productsTable.archived, false),
+      ),
+    );
+}
+
 export async function archiveProduct(
   db: WritableDbOrTx,
   businessId: number,
@@ -203,6 +240,57 @@ export async function listPriceHistory(productId: number) {
     .from(priceHistoryTable)
     .where(eq(priceHistoryTable.productId, productId))
     .orderBy(desc(priceHistoryTable.effectiveFrom));
+}
+
+interface PriceHistoryRow {
+  productId: number;
+  purchasePrice: number;
+  salePrice: number | null;
+  effectiveFrom: string;
+}
+
+/** Pure reduction (one row kept per product — the latest by effectiveFrom), testable without a database. */
+export function pickLatestPrices(
+  rows: PriceHistoryRow[],
+): Map<number, { purchasePrice: number; salePrice: number | null }> {
+  const latestByProduct = new Map<number, string>();
+  const result = new Map<
+    number,
+    { purchasePrice: number; salePrice: number | null }
+  >();
+  for (const row of rows) {
+    const latest = latestByProduct.get(row.productId);
+    if (!latest || row.effectiveFrom > latest) {
+      latestByProduct.set(row.productId, row.effectiveFrom);
+      result.set(row.productId, {
+        purchasePrice: row.purchasePrice,
+        salePrice: row.salePrice,
+      });
+    }
+  }
+  return result;
+}
+
+/**
+ * Each product's current purchase/sale price — the latest price_history row per product. Used by
+ * the new-receipt page for the "↑ було 310 · націнка 52%" hints: the price entered on a line is
+ * compared against what's already on record, not re-derived from the line itself.
+ */
+export async function listCurrentPrices(
+  businessId: number,
+): Promise<Map<number, { purchasePrice: number; salePrice: number | null }>> {
+  const rows = await getDb()
+    .select({
+      productId: priceHistoryTable.productId,
+      purchasePrice: priceHistoryTable.purchasePrice,
+      salePrice: priceHistoryTable.salePrice,
+      effectiveFrom: priceHistoryTable.effectiveFrom,
+    })
+    .from(priceHistoryTable)
+    .innerJoin(productsTable, eq(productsTable.id, priceHistoryTable.productId))
+    .where(eq(productsTable.businessId, businessId));
+
+  return pickLatestPrices(rows);
 }
 
 /** Pure, so the archive-candidate rule (spec 3.1) is testable without a database. */

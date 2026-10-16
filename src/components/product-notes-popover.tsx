@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { monthStartDate } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 import {
   createProductNoteAction,
   deleteProductNoteAction,
@@ -177,6 +178,55 @@ function NoteItem({
   );
 }
 
+/** Shared by the popover (Sales rows, product detail title) and the inline section below. */
+export function ProductNotesList({
+  productId,
+  month,
+  notes,
+  noteTypes,
+}: {
+  productId: number;
+  month: string;
+  notes: ActiveProductNote[];
+  noteTypes: NoteTypeOption[];
+}) {
+  const t = useTranslations("productNotes");
+  const [adding, setAdding] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-2">
+      {notes.map((note) => (
+        <NoteItem
+          key={note.id}
+          note={note}
+          month={month}
+          noteTypes={noteTypes}
+        />
+      ))}
+      {adding ? (
+        <NoteForm
+          productId={productId}
+          month={month}
+          noteTypes={noteTypes}
+          onCancel={() => setAdding(false)}
+          formAction={createProductNoteAction}
+        />
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-start"
+          onClick={() => setAdding(true)}
+        >
+          <Plus className="size-3.5" />
+          {t("addNote")}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function ProductNotesPopover({
   productId,
   productName,
@@ -193,6 +243,7 @@ export function ProductNotesPopover({
   const t = useTranslations("productNotes");
   const locale = useLocale();
   const [adding, setAdding] = useState(false);
+  const [open, setOpen] = useState(false);
 
   if (noteTypes.length === 0) {
     // No note types configured yet (settings) — nothing to attach a note to.
@@ -204,7 +255,12 @@ export function ProductNotesPopover({
   );
 
   return (
-    <Popover onOpenChange={(open) => !open && setAdding(false)}>
+    <Popover
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) setAdding(false);
+      }}
+    >
       <PopoverTrigger
         render={
           <button
@@ -213,7 +269,14 @@ export function ProductNotesPopover({
               count: notes.length,
               product: productName,
             })}
-            className="inline-flex items-center gap-0.5 rounded-full px-0.5 align-middle"
+            className={cn(
+              "inline-flex items-center gap-0.5 rounded-full px-0.5 align-middle",
+              // An empty (dashed) trigger is noise on every row at once — only the colour dots
+              // for existing notes stay always visible. Needs the row to carry `group`.
+              notes.length === 0 &&
+                !open &&
+                "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+            )}
           >
             {notes.length > 0 ? (
               notes.map((note) => (

@@ -1,88 +1,51 @@
-import { getTranslations } from "next-intl/server";
-import { TransferForm } from "@/components/transfer-form";
+import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TransferList } from "@/components/transfer-list";
+import { businessCurrentMonth, formatMonthLabel } from "@/lib/dates";
 import { getCurrentBusiness } from "@/server/services/business";
-import { listCategories } from "@/server/services/categories";
-import { listInventory } from "@/server/services/inventory";
-import { listLocations } from "@/server/services/locations";
-import { listProducts } from "@/server/services/products";
 import { listTransfersWithSummary } from "@/server/services/transfers";
 import { requireOwner } from "@/server/session";
-
-function buildCategoryOptions(
-  categories: {
-    id: number;
-    name: string;
-    parentId: number | null;
-    archived: boolean;
-  }[],
-) {
-  const active = categories.filter((category) => !category.archived);
-  const options: { id: number; label: string }[] = [];
-  for (const top of active.filter((category) => category.parentId === null)) {
-    options.push({ id: top.id, label: top.name });
-    for (const sub of active.filter(
-      (category) => category.parentId === top.id,
-    )) {
-      options.push({ id: sub.id, label: `— ${sub.name}` });
-    }
-  }
-  return options;
-}
 
 export default async function TransfersPage() {
   const user = await requireOwner();
   const t = await getTranslations("transfers");
+  const locale = await getLocale();
   const business = await getCurrentBusiness();
+  const timezone = business?.timezone ?? "Europe/Kyiv";
 
-  const [transfers, locations, products, categories, inventory] =
-    await Promise.all([
-      listTransfersWithSummary(user.businessId),
-      listLocations(user.businessId),
-      listProducts(user.businessId),
-      listCategories(user.businessId),
-      listInventory(user.businessId),
-    ]);
+  const transfers = await listTransfersWithSummary(user.businessId);
 
-  const stockByProduct = new Map<number, Map<number, number>>();
-  for (const row of inventory) {
-    const existing = stockByProduct.get(row.productId) ?? new Map();
-    existing.set(row.locationId, row.quantity);
-    stockByProduct.set(row.productId, existing);
-  }
+  const currentMonth = businessCurrentMonth(timezone);
+  const transfersThisMonth = transfers.filter(
+    (transfer) => transfer.createdAt.toISOString().slice(0, 7) === currentMonth,
+  );
 
   return (
-    <div className="flex max-w-6xl flex-col gap-6 px-6 py-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t("title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("subtitle", { count: transfers.length })}
-        </p>
+    <div className="flex flex-col gap-6 px-6 py-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {t("title")}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t("listSubtitle", {
+              month: formatMonthLabel(currentMonth, locale).toLowerCase(),
+              count: transfersThisMonth.length,
+            })}
+          </p>
+        </div>
+        <Button
+          type="button"
+          nativeButton={false}
+          render={<Link href={`/${locale}/transfers/new`} />}
+        >
+          <Plus className="size-4" />
+          {t("newTransferButton")}
+        </Button>
       </div>
-      <TransferList
-        transfers={transfers}
-        timezone={business?.timezone ?? "Europe/Kyiv"}
-      />
-      <TransferForm
-        locations={locations}
-        products={products
-          .filter((product) => !product.archived)
-          .map((product) => ({
-            id: product.id,
-            name: product.name,
-            categoryId: product.categoryId,
-            minStock: product.minStock,
-          }))}
-        categories={buildCategoryOptions(categories)}
-        stockByLocation={Array.from(stockByProduct.entries()).map(
-          ([productId, perLocation]) => [
-            productId,
-            Array.from(perLocation.entries()),
-          ],
-        )}
-      />
+      <TransferList transfers={transfers} timezone={timezone} />
     </div>
   );
 }

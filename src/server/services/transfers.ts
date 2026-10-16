@@ -5,6 +5,7 @@ import { inventoryTable } from "@/db/schema/inventory";
 import { locationsTable } from "@/db/schema/locations";
 import { transferItemsTable } from "@/db/schema/transfer-items";
 import { transfersTable } from "@/db/schema/transfers";
+import { usersTable } from "@/db/schema/users";
 
 type WritableDbOrTx = Pick<
   ReturnType<typeof getDb>,
@@ -128,9 +129,14 @@ export async function postTransfer(
 export interface TransferSummary {
   id: number;
   createdAt: Date;
+  fromLocationId: number;
   fromLocationName: string;
+  fromLocationType: "warehouse" | "shop";
+  toLocationId: number;
   toLocationName: string;
+  toLocationType: "warehouse" | "shop";
   lineCount: number;
+  createdByRole: "owner" | "seller";
 }
 
 /** Read-only summary for the transfers list page: one row per transfer with its totals. */
@@ -145,15 +151,17 @@ export async function listTransfersWithSummary(
       createdAt: transfersTable.createdAt,
       fromLocationId: transfersTable.fromLocationId,
       toLocationId: transfersTable.toLocationId,
+      createdByRole: usersTable.role,
     })
     .from(transfersTable)
+    .innerJoin(usersTable, eq(usersTable.id, transfersTable.createdBy))
     .where(eq(transfersTable.businessId, businessId))
     .orderBy(desc(transfersTable.createdAt));
 
-  const locationNames = new Map(
+  const locations = new Map(
     (await db.select().from(locationsTable)).map((location) => [
       location.id,
-      location.name,
+      location,
     ]),
   );
 
@@ -176,8 +184,14 @@ export async function listTransfersWithSummary(
   return transfers.map((transfer) => ({
     id: transfer.id,
     createdAt: transfer.createdAt,
-    fromLocationName: locationNames.get(transfer.fromLocationId) ?? "",
-    toLocationName: locationNames.get(transfer.toLocationId) ?? "",
+    fromLocationId: transfer.fromLocationId,
+    fromLocationName: locations.get(transfer.fromLocationId)?.name ?? "",
+    fromLocationType:
+      locations.get(transfer.fromLocationId)?.type ?? "warehouse",
+    toLocationId: transfer.toLocationId,
+    toLocationName: locations.get(transfer.toLocationId)?.name ?? "",
+    toLocationType: locations.get(transfer.toLocationId)?.type ?? "warehouse",
     lineCount: lineCounts.get(transfer.id) ?? 0,
+    createdByRole: transfer.createdByRole,
   }));
 }

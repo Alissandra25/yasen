@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, parseMoney, roundHalfAwayFromZero } from "./money";
+import {
+  formatMoney,
+  formatMoneyBare,
+  parseMoney,
+  roundHalfAwayFromZero,
+} from "./money";
 
 describe("parseMoney", () => {
   it("parses a plain integer amount", () => {
@@ -47,15 +52,37 @@ describe("roundHalfAwayFromZero", () => {
 });
 
 describe("formatMoney", () => {
-  it("formats kopecks as a currency string for the given locale", () => {
-    expect(formatMoney(10550, { currency: "UAH", locale: "en-US" })).toMatch(
-      /UAH\s*105\.50/,
+  it("formats kopecks with the currency unit as trailing text, never a symbol", () => {
+    expect(formatMoney(10550, { currency: "UAH", locale: "en-US" })).toBe(
+      "105.50 UAH",
+    );
+    expect(formatMoney(10550, { currency: "UAH", locale: "uk" })).toBe(
+      "105,50 грн",
     );
   });
 
   it("keeps two decimal places for a whole amount", () => {
-    expect(formatMoney(10000, { currency: "UAH", locale: "en-US" })).toMatch(
-      /UAH\s*100\.00/,
+    expect(formatMoney(10000, { currency: "UAH", locale: "en-US" })).toBe(
+      "100.00 UAH",
     );
+  });
+});
+
+// uk's Intl grouping separator is a narrow no-break space, not a plain U+0020.
+const normaliseSpaces = (value: string) => value.replace(/\s/g, " ");
+
+describe("formatMoneyBare", () => {
+  it("trims a trailing .00 for a whole amount", () => {
+    expect(normaliseSpaces(formatMoneyBare(145000, { locale: "uk" }))).toBe(
+      "1 450",
+    );
+  });
+
+  it("keeps significant decimals", () => {
+    expect(formatMoneyBare(4550, { locale: "uk" })).toBe("45,5");
+  });
+
+  it("never includes a currency symbol or unit", () => {
+    expect(formatMoneyBare(100000, { locale: "en-US" })).toBe("1,000");
   });
 });

@@ -6,6 +6,7 @@ import {
   createProduct,
   importProductsFromRows,
   isArchiveCandidate,
+  pickLatestPrices,
   updateProduct,
 } from "./products";
 
@@ -295,5 +296,52 @@ describe("applyProductImportResolution", () => {
       minStock: 10,
     });
     expect(result).toEqual({ ok: true, product: updated });
+  });
+});
+
+describe("pickLatestPrices", () => {
+  it("keeps the row with the latest effectiveFrom per product", () => {
+    const result = pickLatestPrices([
+      {
+        productId: 1,
+        purchasePrice: 4000,
+        salePrice: 6000,
+        effectiveFrom: "2026-09-01",
+      },
+      {
+        productId: 1,
+        purchasePrice: 4600,
+        salePrice: 6500,
+        effectiveFrom: "2026-10-08",
+      },
+      {
+        productId: 2,
+        purchasePrice: 2100,
+        salePrice: null,
+        effectiveFrom: "2026-10-01",
+      },
+    ]);
+
+    expect(result.get(1)).toEqual({ purchasePrice: 4600, salePrice: 6500 });
+    expect(result.get(2)).toEqual({ purchasePrice: 2100, salePrice: null });
+  });
+
+  it("ignores row order — the latest date wins even if it comes first", () => {
+    const result = pickLatestPrices([
+      {
+        productId: 1,
+        purchasePrice: 4600,
+        salePrice: 6500,
+        effectiveFrom: "2026-10-08",
+      },
+      {
+        productId: 1,
+        purchasePrice: 4000,
+        salePrice: 6000,
+        effectiveFrom: "2026-09-01",
+      },
+    ]);
+
+    expect(result.get(1)).toEqual({ purchasePrice: 4600, salePrice: 6500 });
   });
 });

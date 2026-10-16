@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/db/client";
-import { businessToday } from "@/lib/dates";
+import { businessToday, dateOnlySchema } from "@/lib/dates";
 import { moneyInputSchema, parseMoney } from "@/lib/money";
 import { recordAuditEntry } from "@/server/audit";
 import { getCurrentBusiness } from "@/server/services/business";
@@ -41,6 +41,9 @@ const postPurchaseActionInputSchema = z
     supplierId: z.number().int().positive().nullable(),
     newSupplierName: z.string().trim().max(255).nullable(),
     defaultLocationId: z.number().int().positive(),
+    // "Дата надходження" (spec 3.3): when the goods arrived / prices take effect. Optional for
+    // backward compatibility — falls back to today, same as before this field existed.
+    receivedDate: dateOnlySchema.nullable().optional(),
     lines: z.array(purchaseLineActionSchema).min(1),
   })
   .refine((input) => input.supplierId !== null || !!input.newSupplierName, {
@@ -74,7 +77,9 @@ export async function postPurchaseAction(
   if (!salePricesValid) return { ok: false, error: "invalid_input" };
 
   const business = await getCurrentBusiness();
-  const effectiveFrom = businessToday(business?.timezone ?? "Europe/Kyiv");
+  const effectiveFrom =
+    parsed.data.receivedDate ??
+    businessToday(business?.timezone ?? "Europe/Kyiv");
 
   const lines = parsed.data.lines.map((line) => ({
     productId: line.productId,

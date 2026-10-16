@@ -1,29 +1,38 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Store, Warehouse } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatMoneyBare, currencyLabel } from "@/lib/money";
+import { cn } from "@/lib/utils";
 import {
   updateLocationAction,
   type LocationFormState,
 } from "@/server/actions/locations";
 
 const initialState: LocationFormState = {};
+const LOCATION_TYPES = ["warehouse", "shop"] as const;
 
 export function LocationRow({
   location,
   positionCount,
   negativeCount,
+  purchaseValue,
+  currency,
 }: {
   location: { id: number; name: string; type: "shop" | "warehouse" };
   positionCount: number;
   negativeCount: number;
+  purchaseValue: number;
+  currency: string;
 }) {
   const t = useTranslations("locations");
+  const locale = useLocale();
   const [editing, setEditing] = useState(false);
   const boundAction = updateLocationAction.bind(null, location.id);
   const [state, formAction, isPending] = useActionState(
@@ -39,98 +48,135 @@ export function LocationRow({
     wasPendingRef.current = isPending;
   }, [isPending, state]);
 
-  if (!editing) {
-    const TypeIcon = location.type === "shop" ? Store : Warehouse;
+  const TypeIcon = location.type === "shop" ? Store : Warehouse;
+
+  if (editing) {
     return (
-      <li className="flex items-center justify-between gap-4 rounded-lg border border-border bg-card px-3 py-2">
-        <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-muted">
-            <TypeIcon className="size-4 text-muted-foreground" />
-          </span>
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              {location.name}
-            </p>
-            <Badge variant="outline" className="font-normal">
-              {t(`type.${location.type}`)}
-            </Badge>
+      <li className="rounded-xl border border-border bg-card p-4">
+        <form action={formAction} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`name-${location.id}`}>{t("nameLabel")}</Label>
+            <Input
+              id={`name-${location.id}`}
+              name="name"
+              defaultValue={location.name}
+              required
+            />
           </div>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">
-              {t("positionsLabel")}
-            </p>
-            <p className="font-semibold text-foreground">{positionCount}</p>
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("typeLabel")}</Label>
+            <div className="inline-flex items-center gap-1 rounded-lg bg-muted p-1">
+              {LOCATION_TYPES.map((value) => (
+                <label
+                  key={value}
+                  className="has-checked:bg-card has-checked:text-foreground has-checked:shadow-sm flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground"
+                >
+                  <input
+                    type="radio"
+                    name="type"
+                    value={value}
+                    defaultChecked={location.type === value}
+                    className="sr-only"
+                  />
+                  {t(`type.${value}`)}
+                </label>
+              ))}
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">
-              {t("negativeLabel")}
+          {state.error && (
+            <p className="text-sm text-destructive" role="alert">
+              {t("invalidInput")}
             </p>
-            <p
-              className={
-                negativeCount > 0
-                  ? "font-semibold text-destructive"
-                  : "font-semibold text-foreground"
-              }
+          )}
+          <div className="flex items-center gap-2">
+            <Button type="submit" size="sm" disabled={isPending}>
+              {t("save")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(false)}
             >
-              {negativeCount}
-            </p>
+              {t("cancel")}
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(true)}
-          >
-            {t("edit")}
-          </Button>
-        </div>
+        </form>
       </li>
     );
   }
 
   return (
-    <li className="rounded-lg border border-border bg-card px-3 py-2">
-      <form action={formAction} className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`name-${location.id}`}>{t("nameLabel")}</Label>
-          <Input
-            id={`name-${location.id}`}
-            name="name"
-            defaultValue={location.name}
-            required
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`type-${location.id}`}>{t("typeLabel")}</Label>
-          <select
-            id={`type-${location.id}`}
-            name="type"
-            defaultValue={location.type}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+    <li className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              "flex size-10 shrink-0 items-center justify-center rounded-lg",
+              location.type === "warehouse"
+                ? "bg-brand-primary/20 text-brand-primary-foreground"
+                : "bg-brand-accent/20 text-brand-accent-foreground",
+            )}
           >
-            <option value="shop">{t("type.shop")}</option>
-            <option value="warehouse">{t("type.warehouse")}</option>
-          </select>
+            <TypeIcon className="size-5" />
+          </span>
+          <div>
+            <p className="font-medium text-foreground">{location.name}</p>
+            <Badge
+              className={cn(
+                "font-normal",
+                location.type === "warehouse"
+                  ? "bg-brand-primary/20 text-brand-primary-foreground"
+                  : "bg-brand-accent/20 text-brand-accent-foreground",
+              )}
+            >
+              {t(`type.${location.type}`)}
+            </Badge>
+          </div>
         </div>
-        {state.error && (
-          <p className="text-sm text-destructive" role="alert">
-            {t("invalidInput")}
-          </p>
-        )}
-        <Button type="submit" size="sm" disabled={isPending}>
-          {t("save")}
-        </Button>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setEditing(false)}
+          onClick={() => setEditing(true)}
         >
-          {t("cancel")}
+          {t("edit")}
         </Button>
-      </form>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg bg-muted px-3 py-2">
+          <p className="text-xs text-muted-foreground">{t("positionsLabel")}</p>
+          <p className="font-semibold text-foreground">{positionCount}</p>
+        </div>
+        <div className="rounded-lg bg-muted px-3 py-2">
+          <p className="text-xs text-muted-foreground">{t("negativeLabel")}</p>
+          <p
+            className={cn(
+              "font-semibold",
+              negativeCount > 0 ? "text-destructive" : "text-foreground",
+            )}
+          >
+            {negativeCount}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 text-sm">
+        <span className="text-muted-foreground">
+          {t("purchaseValueLabel")}{" "}
+          <span className="font-medium text-foreground">
+            {formatMoneyBare(purchaseValue, { locale })}{" "}
+            {currencyLabel(currency, locale)}
+          </span>
+        </span>
+        <Link
+          href={`stock?locationId=${location.id}`}
+          className="text-foreground underline-offset-2 hover:underline"
+        >
+          {t("viewStockLink")} →
+        </Link>
+      </div>
     </li>
   );
 }

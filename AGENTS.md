@@ -39,7 +39,8 @@ actually do, described tool-agnostically for any other agent reading this.
 Next.js (App Router) · TypeScript strict · PostgreSQL (Neon in dev) · Drizzle ORM + Drizzle Kit · Zod ·
 Tailwind + shadcn/ui · TanStack Query · next-intl · next-themes · culori · Recharts · React-pdf ·
 Resend · Sentry (@sentry/nextjs) · Vitest + Playwright · bcryptjs (password hashing) · dnd-kit
-(drag & drop reorder for categories) · csv-parse (CSV import).
+(drag & drop reorder for categories) · csv-parse (CSV import) · @tanstack/react-virtual (row
+virtualization for long tables: Sales, Stock, Products).
 Do not add a dependency that is not in this list without asking first.
 
 ## Commands
@@ -83,6 +84,10 @@ Do not add a dependency that is not in this list without asking first.
 
 - No user-facing text in components: use next-intl keys and add them to all three locales (en, uk, ru).
 - Colours only through theme tokens. Brand colours are per business; semantic colours (error / warning / success) are fixed and never use the brand.
+- If an element can take visible time to appear (data still loading, a route transition, a virtualized
+  list's rows not yet in the DOM), show a skeleton instead of empty space — a block skeleton for a
+  single area, list-item skeletons shaped like the real rows for a list/table. Never leave a blank
+  gap where content is about to load.
 
 ## Local dev server
 

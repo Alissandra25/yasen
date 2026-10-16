@@ -134,3 +134,124 @@ export function businessCurrentWeekStart(
 ): string {
   return weekStartDate(businessToday(timeZone, now));
 }
+
+function capitalizeFirst(value: string): string {
+  return value.length > 0 ? value[0].toUpperCase() + value.slice(1) : value;
+}
+
+// Intl appends a localized "year" abbreviation ("р.", "г.") that the mockups never show.
+function stripYearSuffix(value: string): string {
+  return value.replace(/\s*(р\.|г\.)\s*$/u, "");
+}
+
+/** "Жовтень 2026" — a calendar month heading: capitalized, without Intl's "р."/"г." year suffix. */
+export function formatMonthLabel(month: string, locale: string): string {
+  monthOnlySchema.parse(month);
+  const date = new Date(`${month}-01T00:00:00Z`);
+  const formatted = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+  return capitalizeFirst(stripYearSuffix(formatted));
+}
+
+/** "12 – 18 жовтня" — a week range, month named once (in the genitive, via Intl's day+month form). */
+export function formatWeekRangeLabel(
+  weekStart: string,
+  locale: string,
+): string {
+  const days = daysInWeek(weekStart);
+  const start = days[0];
+  const end = days[6];
+  const startDate = new Date(`${start}T00:00:00Z`);
+  const endDate = new Date(`${end}T00:00:00Z`);
+  const endLabel = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(endDate);
+  if (start.slice(0, 7) === end.slice(0, 7)) {
+    const startDay = new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(startDate);
+    return `${startDay} – ${endLabel}`;
+  }
+  const startLabel = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(startDate);
+  return `${startLabel} – ${endLabel}`;
+}
+
+/** "Пн" — capitalized short weekday name (Intl returns it lowercase for uk/ru). */
+export function formatWeekdayShort(dateOnly: string, locale: string): string {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  return capitalizeFirst(
+    new Intl.DateTimeFormat(locale, {
+      weekday: "short",
+      timeZone: "UTC",
+    }).format(date),
+  );
+}
+
+/** "Пн, 12 жовтня" — a single day heading: capitalized weekday + genitive day/month, no year. */
+export function formatDayLabel(dateOnly: string, locale: string): string {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  const dayMonth = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+  return `${formatWeekdayShort(dateOnly, locale)}, ${dayMonth}`;
+}
+
+/** "Неділя, 11 жовтня" — a single day heading with the full weekday name, no year. */
+export function formatDayLabelFull(dateOnly: string, locale: string): string {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  const formatted = new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+  return capitalizeFirst(formatted);
+}
+
+/** "14 жовт 2026" — a compact date for table rows (price history, document lists). */
+export function formatDateOnlyCompact(
+  dateOnly: string,
+  locale: string,
+): string {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  const formatted = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+  return stripYearSuffix(formatted).replace(/\.(?=\s|$)/gu, "");
+}
+
+/**
+ * "пн, 12 жовт" — an inline, sentence-style date for a button label (e.g. "Каса · пн, 12 жовт").
+ * Unlike `formatDayLabel`, the weekday stays lowercase: this reads as part of a phrase, not a
+ * standalone heading.
+ */
+export function formatDayShort(dateOnly: string, locale: string): string {
+  const date = new Date(`${dateOnly}T00:00:00Z`);
+  const weekday = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    timeZone: "UTC",
+  }).format(date);
+  const dayMonth = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  })
+    .format(date)
+    .replace(/\.(?=\s|$)/gu, "");
+  return `${weekday}, ${dayMonth}`;
+}

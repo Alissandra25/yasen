@@ -50,7 +50,7 @@ export async function saveStocktakeCountAction(
   stocktakeId: number,
   productId: number,
   countedQuantity: number,
-  reason: "breakage" | "shortage" | "mis_sort" | "other" | null,
+  reason: "breakage" | "shortage" | "mis_sort" | "count_error" | "other" | null,
 ): Promise<SaveStocktakeCountState> {
   await requireOwner();
 

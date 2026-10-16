@@ -25,9 +25,9 @@ export async function AppSidebar({ user }: { user: SessionUser }) {
         locale={locale}
         brandName={t("home")}
         dailyLabel={t("dailyGroup")}
+        accountingLabel={t("accountingGroup")}
         referencesLabel={t("referencesGroup")}
         settingsLabel={t("settings")}
-        logoutLabel={t("logout")}
         closeMenuLabel={t("closeMenu")}
         salesLabel={t("salesLink")}
         receiptsLabel={t("receiptsLink")}

@@ -28,13 +28,16 @@ export function StartStocktakeButton({
     <Popover>
       <PopoverTrigger
         render={
-          <Button variant="outline" size="sm">
+          <Button size="sm">
             <ClipboardList className="size-4" />
             {t("startButton")}
           </Button>
         }
       />
-      <PopoverContent align="end" className="flex w-64 flex-col gap-3 p-3">
+      <PopoverContent align="end" className="flex w-64 flex-col gap-1.5 p-3">
+        <label className="text-xs text-muted-foreground">
+          {t("whereLabel")}
+        </label>
         <select
           value={locationId}
           onChange={(event) => setLocationId(Number(event.target.value))}
@@ -49,6 +52,7 @@ export function StartStocktakeButton({
         <Button
           type="button"
           size="sm"
+          className="mt-1.5"
           disabled={isPending}
           onClick={() =>
             startTransition(async () => {

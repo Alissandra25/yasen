@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
   // so the browser never executes it) and forced every plain DB read into a
   // connection()-gated Suspense boundary. Not something stage 0 needs; revisit later
   // if a stage wants the perf trade-off.
+  experimental: {
+    // Our root layout lives at app/[locale]/layout.tsx — a top-level dynamic segment — so a
+    // plain app/not-found.tsx can't compose a page for URLs that don't match any route at all
+    // (see node_modules/next/dist/docs/.../not-found.md). global-not-found.js is the documented
+    // way to handle that case; app/[locale]/not-found.tsx and (app)/not-found.tsx still handle
+    // in-app notFound() calls for matched routes as before.
+    globalNotFound: true,
+  },
   turbopack: {
     rules: {
       "*.css": {

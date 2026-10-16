@@ -1,4 +1,4 @@
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
 import { CashSummaryPanel } from "@/components/cash-summary-panel";
 import { SalesMatrix } from "@/components/sales-matrix";
 import {
@@ -65,7 +65,6 @@ export default async function SalesPage({
   }>;
 }) {
   const user = await requireOwner();
-  const t = await getTranslations("sales");
   const locale = await getLocale();
   const business = await getCurrentBusiness();
   const timezone = business?.timezone ?? "Europe/Kyiv";
@@ -133,57 +132,44 @@ export default async function SalesPage({
   );
 
   return (
-    <div className="flex flex-col gap-6 px-6 py-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {t("title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("subtitle", {
-            location: locationName,
-            productCount: activeProducts.length,
-            categoryCount: categories.filter(
-              (category) => !category.archived && category.parentId === null,
-            ).length,
-          })}
-        </p>
-      </div>
-      <div className="flex flex-col gap-6">
-        <SalesMatrix
-          view={view}
-          period={period}
-          days={days}
-          today={today}
-          locationId={locationId}
-          products={activeProducts.map((product) => ({
-            id: product.id,
-            name: product.name,
-            sku: product.sku,
-            categoryId: product.categoryId,
-          }))}
-          categoryOrder={categoryOrder}
-          totals={totals}
-          stockAtStart={Array.from(stockAtStart.entries())}
-          stockNow={Array.from(stockNow.entries())}
-          salePrices={Array.from(salePrices.entries())}
-          noteMonth={noteMonth}
-          noteTypes={noteTypes}
-          activeNotes={activeNotes}
-          currency={currency}
-          locale={locale}
-          timezone={timezone}
-          cashSummarySlot={
-            <CashSummaryPanel
-              day={day}
-              locationId={locationId}
-              month={period}
-              summary={cashSummary}
-              currency={currency}
-              locale={locale}
-            />
-          }
-        />
-      </div>
+    <div className="flex h-full min-h-0 flex-col px-6 py-6">
+      <SalesMatrix
+        view={view}
+        period={period}
+        days={days}
+        today={today}
+        locationId={locationId}
+        locationName={locationName}
+        products={activeProducts.map((product) => ({
+          id: product.id,
+          name: product.name,
+          sku: product.sku,
+          categoryId: product.categoryId,
+        }))}
+        categoryOrder={categoryOrder}
+        totals={totals}
+        stockAtStart={Array.from(stockAtStart.entries())}
+        stockNow={Array.from(stockNow.entries())}
+        salePrices={Array.from(salePrices.entries())}
+        noteMonth={noteMonth}
+        noteTypes={noteTypes}
+        activeNotes={activeNotes}
+        currency={currency}
+        locale={locale}
+        timezone={timezone}
+        cashBoxDay={day}
+        cashBoxAmount={cashSummary.netTotal}
+        cashSummarySlot={
+          <CashSummaryPanel
+            day={day}
+            locationId={locationId}
+            month={period}
+            summary={cashSummary}
+            currency={currency}
+            locale={locale}
+          />
+        }
+      />
     </div>
   );
 }

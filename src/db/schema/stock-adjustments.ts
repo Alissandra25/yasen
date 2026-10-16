@@ -5,6 +5,7 @@ import {
   pgTable,
   serial,
   timestamp,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { locationsTable } from "./locations";
 import { productsTable } from "./products";
@@ -12,11 +13,12 @@ import { stocktakesTable } from "./stocktakes";
 import { usersTable } from "./users";
 import { timestamps } from "./_shared/timestamps";
 
-// breakage/shortage/mis-sort/other, per spec 4.1.
+// breakage/shortage/mis-sort/count-error/other, per spec 4.1.
 export const stockAdjustmentReasonEnum = pgEnum("stock_adjustment_reason", [
   "breakage",
   "shortage",
   "mis_sort",
+  "count_error",
   "other",
 ]);
 
@@ -37,6 +39,7 @@ export const stockAdjustmentsTable = pgTable(
     oldQuantity: integer("old_quantity").notNull(),
     newQuantity: integer("new_quantity").notNull(),
     reason: stockAdjustmentReasonEnum("reason").notNull(),
+    comment: varchar("comment", { length: 500 }),
     adjustedBy: integer("adjusted_by")
       .notNull()
       .references(() => usersTable.id),

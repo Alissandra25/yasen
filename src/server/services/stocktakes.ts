@@ -114,7 +114,7 @@ export interface StocktakeItemRow {
   categoryId: number;
   systemQuantity: number;
   countedQuantity: number | null;
-  reason: "breakage" | "shortage" | "mis_sort" | "other" | null;
+  reason: "breakage" | "shortage" | "mis_sort" | "count_error" | "other" | null;
 }
 
 export async function listStocktakeItems(
@@ -144,7 +144,9 @@ export const saveStocktakeCountSchema = z.object({
   stocktakeId: z.number().int().positive(),
   productId: z.number().int().positive(),
   countedQuantity: z.number().int(),
-  reason: z.enum(["breakage", "shortage", "mis_sort", "other"]).nullable(),
+  reason: z
+    .enum(["breakage", "shortage", "mis_sort", "count_error", "other"])
+    .nullable(),
 });
 
 export type SaveStocktakeCountInput = z.infer<typeof saveStocktakeCountSchema>;

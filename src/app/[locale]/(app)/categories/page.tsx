@@ -54,12 +54,35 @@ export default async function CategoriesPage() {
       };
     });
 
+  const subcategoryCount = tree.reduce(
+    (sum, category) => sum + category.subcategories.length,
+    0,
+  );
+
+  const flatCategories = visible.map((category) => ({
+    id: category.id,
+    name: category.name,
+    parentId: category.parentId,
+    productCount: productCounts.get(category.id) ?? 0,
+  }));
+
   return (
-    <div className="flex max-w-3xl flex-col gap-6 px-6 py-8">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">
-        {t("title")}
-      </h1>
-      <CategoryManager initialCategories={tree} />
+    <div className="flex flex-col gap-6 px-6 py-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {t("title")}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t("subtitle", {
+            categoryCount: tree.length,
+            subcategoryCount,
+          })}
+        </p>
+      </div>
+      <CategoryManager
+        initialCategories={tree}
+        flatCategories={flatCategories}
+      />
     </div>
   );
 }

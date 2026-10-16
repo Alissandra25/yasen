@@ -1,12 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowLeftRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormErrorBanner } from "@/components/form-error-banner";
+import { LocationDot } from "@/components/location-dot";
 import { useToast } from "@/components/toast-provider";
+import { formatNumber } from "@/lib/numbers";
+import { cn } from "@/lib/utils";
 import { postTransferAction } from "@/server/actions/transfers";
 
 function normalize(value: string) {
@@ -19,10 +23,11 @@ export function TransferForm({
   categories,
   stockByLocation,
 }: {
-  locations: { id: number; name: string }[];
+  locations: { id: number; name: string; type: "warehouse" | "shop" }[];
   products: {
     id: number;
     name: string;
+    sku: string | null;
     categoryId: number;
     minStock: number;
   }[];
@@ -31,6 +36,8 @@ export function TransferForm({
   stockByLocation: [number, [number, number][]][];
 }) {
   const t = useTranslations("transfers");
+  const locale = useLocale();
+  const router = useRouter();
   const { showToast } = useToast();
 
   const stockMap = useMemo(() => {
@@ -48,9 +55,10 @@ export function TransferForm({
   const [categoryFilter, setCategoryFilter] = useState("");
   const [search, setSearch] = useState("");
   const [belowMinOnly, setBelowMinOnly] = useState(false);
+  const [selectedOnly, setSelectedOnly] = useState(false);
   const [selected, setSelected] = useState<Map<number, string>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<"error" | "posted" | null>(null);
+  const [message, setMessage] = useState<"error" | null>(null);
   const [errorDetail, setErrorDetail] = useState<{
     productName: string;
     available: number;
@@ -61,13 +69,22 @@ export function TransferForm({
     setToLocationId(fromLocationId);
   }
 
+  const belowMinCount = products.filter((product) => {
+    const destinationQty = stockMap.get(product.id)?.get(toLocationId) ?? 0;
+    return destinationQty < product.minStock;
+  }).length;
+
   const searchQuery = normalize(search);
   const availableProducts = products.filter((product) => {
     if (categoryFilter && String(product.categoryId) !== categoryFilter) {
       return false;
     }
-    if (searchQuery && !normalize(product.name).includes(searchQuery)) {
-      return false;
+    if (searchQuery) {
+      const matchesName = normalize(product.name).includes(searchQuery);
+      const matchesSku = product.sku
+        ? normalize(product.sku).includes(searchQuery)
+        : false;
+      if (!matchesName && !matchesSku) return false;
     }
     const qty = stockMap.get(product.id)?.get(fromLocationId) ?? 0;
     if (qty <= 0) return false;
@@ -75,6 +92,7 @@ export function TransferForm({
       const destinationQty = stockMap.get(product.id)?.get(toLocationId) ?? 0;
       if (destinationQty >= product.minStock) return false;
     }
+    if (selectedOnly && !selected.has(product.id)) return false;
     return true;
   });
 
@@ -84,7 +102,7 @@ export function TransferForm({
       if (next.has(productId)) {
         next.delete(productId);
       } else {
-        next.set(productId, "1");
+        next.set(productId, "");
       }
       return next;
     });
@@ -97,6 +115,10 @@ export function TransferForm({
       return next;
     });
   }
+
+  const categoryLabel = categories.find(
+    (category) => String(category.id) === categoryFilter,
+  )?.label;
 
   async function handleSubmit() {
     setIsSubmitting(true);
@@ -135,12 +157,22 @@ export function TransferForm({
     }
 
     showToast({ message: t("posted") });
-    setSelected(new Map());
+    router.push("/transfers");
+    router.refresh();
   }
 
+  const selectedLines = Array.from(selected.entries());
+  const hasOverStockError = selectedLines.some(([productId, raw]) => {
+    const quantity = Number.parseInt(raw, 10) || 0;
+    const available = stockMap.get(productId)?.get(fromLocationId) ?? 0;
+    return quantity > available;
+  });
+
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-      <h3 className="font-semibold text-foreground">{t("newTransferTitle")}</h3>
+    <div className="flex flex-col gap-4 pb-20">
+      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        {t("newTransferTitle")}
+      </h1>
 
       {message === "error" && (
         <FormErrorBanner
@@ -156,22 +188,33 @@ export function TransferForm({
         />
       )}
 
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">
             {t("fromLabel")}
           </label>
-          <select
-            value={fromLocationId}
-            onChange={(event) => setFromLocationId(Number(event.target.value))}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            {locations.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <LocationDot
+              type={
+                locations.find((l) => l.id === fromLocationId)?.type ??
+                "warehouse"
+              }
+              className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
+            />
+            <select
+              value={fromLocationId}
+              onChange={(event) =>
+                setFromLocationId(Number(event.target.value))
+              }
+              className="flex h-9 w-44 items-center rounded-lg border border-input bg-transparent pr-2.5 pl-6 text-sm font-medium text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <Button
           type="button"
@@ -187,125 +230,238 @@ export function TransferForm({
           <label className="text-xs text-muted-foreground">
             {t("toLabel")}
           </label>
-          <select
-            value={toLocationId}
-            onChange={(event) => setToLocationId(Number(event.target.value))}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            {locations.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="relative flex flex-col gap-1">
-          <label className="text-xs text-muted-foreground">
-            {t("searchPlaceholder")}
-          </label>
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="h-8 w-48 rounded-lg border border-input bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            <LocationDot
+              type={
+                locations.find((l) => l.id === toLocationId)?.type ??
+                "warehouse"
+              }
+              className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
             />
+            <select
+              value={toLocationId}
+              onChange={(event) => setToLocationId(Number(event.target.value))}
+              className="flex h-9 w-44 items-center rounded-lg border border-input bg-transparent pr-2.5 pl-6 text-sm font-medium text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-muted-foreground">
-            {t("categoryLabel")}
-          </label>
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-          >
-            <option value="">{t("allCategories")}</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <p className="text-sm text-muted-foreground">{t("directionHint")}</p>
       </div>
-
-      <label className="flex items-center gap-2 text-sm text-muted-foreground">
-        <input
-          type="checkbox"
-          checked={belowMinOnly}
-          onChange={(event) => setBelowMinOnly(event.target.checked)}
-          className="size-4 rounded border-input accent-primary"
-        />
-        {t("belowMinFilter")}
-      </label>
 
       {fromLocationId === toLocationId && (
         <p className="text-sm text-destructive">{t("sameLocationError")}</p>
       )}
 
-      <ul className="flex flex-col gap-2">
-        {availableProducts.map((product) => {
-          const available = stockMap.get(product.id)?.get(fromLocationId) ?? 0;
-          const isSelected = selected.has(product.id);
-          return (
-            <li
-              key={product.id}
-              className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 has-[input:checked]:border-primary/40 has-[input:checked]:bg-accent/40"
-            >
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => toggleSelected(product.id)}
-                className="size-4 rounded border-input accent-primary"
-              />
-              <span className="flex-1 text-sm text-foreground">
-                {product.name}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {t("availableLabel")}: {available}
-              </span>
-              {isSelected && (
-                <>
-                  <Input
-                    className="w-20"
-                    inputMode="numeric"
-                    value={selected.get(product.id) ?? ""}
-                    onChange={(event) =>
-                      setQuantity(product.id, event.target.value)
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(product.id, String(available))}
-                  >
-                    {t("fillAll")}
-                  </Button>
-                </>
-              )}
-            </li>
-          );
-        })}
-        {availableProducts.length === 0 && (
-          <li className="text-sm text-muted-foreground">
-            {t("noAvailableProducts")}
-          </li>
-        )}
-      </ul>
-
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          size="sm"
-          disabled={isSubmitting || fromLocationId === toLocationId}
-          onClick={() => void handleSubmit()}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-xs flex-1">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t("searchPlaceholder")}
+            className="h-8 w-full rounded-lg border border-input bg-transparent pr-2 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+          />
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={(event) => setCategoryFilter(event.target.value)}
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none"
         >
-          {t("post")}
-        </Button>
+          <option value="">
+            {t("categoryLabel")}: {t("allCategories")}
+          </option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.label}
+            </option>
+          ))}
+        </select>
+        {categoryLabel && <span className="sr-only">{categoryLabel}</span>}
+        <button
+          type="button"
+          onClick={() => setBelowMinOnly((v) => !v)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
+            belowMinOnly
+              ? "border-primary/40 bg-accent text-accent-foreground"
+              : "border-border text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {t("belowMinFilter")}
+          <span className="rounded-full bg-muted px-1.5 text-xs">
+            {belowMinCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelectedOnly((v) => !v)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors",
+            selectedOnly
+              ? "border-primary/40 bg-accent text-accent-foreground"
+              : "border-border text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {t("selectedOnlyFilter")}
+          <span className="rounded-full bg-muted px-1.5 text-xs">
+            {selected.size}
+          </span>
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted text-left text-muted-foreground">
+              <th className="w-8 px-3 py-2" />
+              <th className="px-2 py-2 font-medium">{t("productColumn")}</th>
+              <th className="px-2 py-2 text-right font-medium">
+                {t("fromLabel")}
+              </th>
+              <th className="px-2 py-2 text-right font-medium">
+                {t("toLabel")}
+              </th>
+              <th className="px-2 py-2 text-right font-medium">
+                {t("moveColumn")}
+              </th>
+              <th className="px-2 py-2 font-medium">{t("afterColumn")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {availableProducts.map((product) => {
+              const fromQty =
+                stockMap.get(product.id)?.get(fromLocationId) ?? 0;
+              const toQty = stockMap.get(product.id)?.get(toLocationId) ?? 0;
+              const isSelected = selected.has(product.id);
+              const raw = selected.get(product.id) ?? "";
+              const quantity = Number.parseInt(raw, 10) || 0;
+              const overStock = isSelected && quantity > fromQty;
+
+              return (
+                <tr
+                  key={product.id}
+                  className={cn(
+                    "border-b border-border last:border-b-0",
+                    overStock ? "bg-destructive/10" : "hover:bg-muted/30",
+                  )}
+                >
+                  <td className="px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelected(product.id)}
+                      className="size-4 rounded border-input accent-primary"
+                    />
+                  </td>
+                  <td className="px-2 py-2">
+                    <p className="font-medium text-foreground">
+                      {product.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {product.sku}
+                    </p>
+                  </td>
+                  <td className="px-2 py-2 text-right text-foreground">
+                    {formatNumber(fromQty, locale)}
+                  </td>
+                  <td className="px-2 py-2 text-right text-foreground">
+                    {formatNumber(toQty, locale)}
+                  </td>
+                  <td className="px-2 py-2">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Input
+                        className={cn(
+                          "w-16 text-right",
+                          overStock && "border-destructive",
+                        )}
+                        inputMode="numeric"
+                        disabled={!isSelected}
+                        value={raw}
+                        onChange={(event) => {
+                          if (!isSelected) toggleSelected(product.id);
+                          setQuantity(product.id, event.target.value);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!isSelected) toggleSelected(product.id);
+                          setQuantity(product.id, String(fromQty));
+                        }}
+                      >
+                        {t("fillAll")}
+                      </Button>
+                    </div>
+                  </td>
+                  <td className="px-2 py-2 text-sm">
+                    {overStock ? (
+                      <span className="font-medium text-destructive">
+                        {t("insufficientStockShort", { available: fromQty })}
+                      </span>
+                    ) : isSelected && quantity > 0 ? (
+                      <span className="text-muted-foreground">
+                        {t("afterPreview", {
+                          from: formatNumber(fromQty - quantity, locale),
+                          to: formatNumber(toQty + quantity, locale),
+                        })}
+                      </span>
+                    ) : null}
+                  </td>
+                </tr>
+              );
+            })}
+            {availableProducts.length === 0 && (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-3 py-6 text-center text-sm text-muted-foreground"
+                >
+                  {t("noAvailableProducts")}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="sticky bottom-0 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-[0_-2px_8px_rgba(0,0,0,0.04)]">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span>{t("selectedCountFooter", { count: selected.size })}</span>
+          {hasOverStockError && (
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+              {t("overStockBadge")}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/transfers")}
+          >
+            {t("cancel")}
+          </Button>
+          <Button
+            type="button"
+            disabled={
+              isSubmitting ||
+              fromLocationId === toLocationId ||
+              selected.size === 0 ||
+              hasOverStockError
+            }
+            onClick={() => void handleSubmit()}
+          >
+            {t("post")}
+          </Button>
+        </div>
       </div>
     </div>
   );

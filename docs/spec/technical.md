@@ -60,6 +60,18 @@ Bulk upload of products and suppliers from a CSV file (e.g. initial database pop
 - **Starting minimum stock from a receipt:** when a product is created from a receipt (min_stock not specified), its starting value = 10% of the received quantity, rounded up, but **never less than 1** (two washing machines → minimum 1, not 0). This is a default hint; the owner can change it manually.
 - **Supplier on the fly:** if the supplier is not yet in the reference list, its name can be typed directly into the receipt field — it is automatically created in the list (new unique id). Only the name is required; contacts and notes can be added later without going to a separate table.
 - The receipt is recorded in the audit log and linked to the supplier.
+- **Correct button and Статус column are UI placeholders until Stage 3.** The receipt list and detail
+  pages show a "Виправити" button and a Статус (Проведено / Виправлено) column, matching the
+  mockups, but the button is disabled and every receipt's status reads "Проведено" — real
+  corrections of a posted receipt (storing before/after, reversing/replaying stock and
+  price_history, audit trail) are Stage 3 ("Control") scope per `docs/CURRENT_STAGE.md`, not yet
+  built. Wire the existing button up when building that feature instead of adding a new one.
+- **The receipt detail page's "Історія" panel omits a "Створено товар" entry** for products
+  quick-created from this receipt, because `products` has no column linking a product back to the
+  receipt that created it — only `created_at`, which isn't a reliable match (two receipts posted
+  moments apart would be ambiguous). Add a nullable `created_from_purchase_id` column on
+  `products` (or `purchase_id` on the quick-create path) before building this entry, rather than
+  inferring it from timestamps.
 
 ### 3.4 Sales
 
